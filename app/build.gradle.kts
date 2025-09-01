@@ -54,9 +54,6 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.logging.interceptor)
 
-    // WebView dependency
-    implementation(libs.androidx.webkit)
-
     implementation(libs.androidx.material.icons.extended)
 
     implementation(libs.androidx.lifecycle.viewmodel.compose)
