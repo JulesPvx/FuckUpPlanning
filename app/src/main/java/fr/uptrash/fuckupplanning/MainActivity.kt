@@ -4,11 +4,12 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.ui.Modifier
 import dagger.hilt.android.AndroidEntryPoint
-import fr.uptrash.fuckupplanning.ui.login.LoginScreen
+import fr.uptrash.fuckupplanning.ui.calendar.CalendarScreen
 import fr.uptrash.fuckupplanning.ui.theme.FuckUpPlanningTheme
 
 @AndroidEntryPoint
@@ -18,25 +19,11 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FuckUpPlanningTheme {
-                val navController = rememberNavController()
-
-                NavHost(
-                    navController = navController,
-                    startDestination = "login"
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
                 ) {
-                    composable("login") {
-                        LoginScreen(
-                            onLoginSuccess = {
-                                // Navigate to main app screen
-                                // navController.navigate("main") {
-                                //     popUpTo("login") { inclusive = true }
-                                // }
-                            }
-                        )
-                    }
-
-                    // Add other destinations here
-                    // composable("main") { MainScreen() }
+                    CalendarScreen()
                 }
             }
         }

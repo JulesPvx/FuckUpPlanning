@@ -53,8 +53,9 @@ dependencies {
     implementation(libs.converter.gson)
     implementation(libs.okhttp)
     implementation(libs.logging.interceptor)
-
+    implementation(libs.kotlinx.datetime)
     implementation(libs.androidx.material.icons.extended)
+    implementation(libs.converter.scalars)
 
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.kotlinx.coroutines.android)
