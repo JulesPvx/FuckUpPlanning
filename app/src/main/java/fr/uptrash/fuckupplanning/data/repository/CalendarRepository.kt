@@ -15,9 +15,18 @@ class CalendarRepository @Inject constructor(
 ) {
     suspend fun getEvents(): Result<List<Event>> = withContext(Dispatchers.IO) {
         try {
-            val iCalData = apiService.getICalData()
-            val events = parser.parseICalData(iCalData)
-            Result.success(events)
+            // Fetch both S1 and S2 calendar data
+            val s1ICalData = apiService.getS1ICalData()
+            val s2ICalData = apiService.getS2ICalData()
+
+            // Parse events from both calendars
+            val s1Events = parser.parseICalData(s1ICalData)
+            val s2Events = parser.parseICalData(s2ICalData)
+
+            // Combine and sort all events by start time
+            val allEvents = (s1Events + s2Events).sortedBy { it.startDateTime }
+
+            Result.success(allEvents)
         } catch (e: Exception) {
             Result.failure(e)
         }

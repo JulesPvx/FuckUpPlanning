@@ -20,7 +20,15 @@ import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
 enum class CalendarViewMode {
-    DAY, WEEK
+    DAY, WEEK, MONTH
+}
+
+enum class TPGroup {
+    ALL,
+    TP1,
+    TP2,
+    TP3,
+    TP4
 }
 
 @HiltViewModel
@@ -42,10 +50,11 @@ class CalendarViewModel @Inject constructor(
             repository.getEvents().fold(
                 onSuccess = { events ->
                     _uiState.value = _uiState.value.copy(
-                        events = events,
+                        allEvents = events,
                         isLoading = false,
                         error = null
                     )
+                    applyTPFilter()
                 },
                 onFailure = { exception ->
                     _uiState.value = _uiState.value.copy(
@@ -70,6 +79,7 @@ class CalendarViewModel @Inject constructor(
         val newDate = when (_uiState.value.viewMode) {
             CalendarViewMode.DAY -> currentDate.minus(1, DateTimeUnit.DAY)
             CalendarViewMode.WEEK -> currentDate.minus(7, DateTimeUnit.DAY)
+            CalendarViewMode.MONTH -> currentDate.minus(1, DateTimeUnit.MONTH)
         }
         _uiState.value = _uiState.value.copy(selectedDate = newDate)
     }
@@ -79,16 +89,98 @@ class CalendarViewModel @Inject constructor(
         val newDate = when (_uiState.value.viewMode) {
             CalendarViewMode.DAY -> currentDate.plus(1, DateTimeUnit.DAY)
             CalendarViewMode.WEEK -> currentDate.plus(7, DateTimeUnit.DAY)
+            CalendarViewMode.MONTH -> currentDate.plus(1, DateTimeUnit.MONTH)
         }
         _uiState.value = _uiState.value.copy(selectedDate = newDate)
+    }
+
+    fun selectEvent(event: Event?) {
+        _uiState.value = _uiState.value.copy(selectedEvent = event)
+    }
+
+    fun dismissEventDetail() {
+        _uiState.value = _uiState.value.copy(selectedEvent = null)
+    }
+
+    fun selectDayForCourseList(date: LocalDate?) {
+        _uiState.value = _uiState.value.copy(selectedDayForCourseList = date)
+    }
+
+    fun dismissDayCourseList() {
+        _uiState.value = _uiState.value.copy(selectedDayForCourseList = null)
+    }
+
+    fun selectTPGroup(tpGroup: TPGroup) {
+        _uiState.value = _uiState.value.copy(selectedTPGroup = tpGroup)
+        applyTPFilter()
+    }
+
+    fun showSettings() {
+        _uiState.value = _uiState.value.copy(showSettings = true)
+    }
+
+    fun dismissSettings() {
+        _uiState.value = _uiState.value.copy(showSettings = false)
+    }
+
+    private fun applyTPFilter() {
+        val currentState = _uiState.value
+        val filteredEvents = when (currentState.selectedTPGroup) {
+            TPGroup.ALL -> currentState.allEvents
+            TPGroup.TP1 -> {
+                currentState.allEvents.filter { event ->
+                    // Show TP1, TDA, CM courses, or events with no courseType (general events)
+                    event.courseType == null ||
+                            event.courseType == "TP1" ||
+                            event.courseType == "TDA" ||
+                            event.courseType == "CM"
+                }
+            }
+
+            TPGroup.TP2 -> {
+                currentState.allEvents.filter { event ->
+                    // Show TP2, TDA, CM courses, or events with no courseType (general events)
+                    event.courseType == null ||
+                            event.courseType == "TP2" ||
+                            event.courseType == "TDA" ||
+                            event.courseType == "CM"
+                }
+            }
+
+            TPGroup.TP3 -> {
+                currentState.allEvents.filter { event ->
+                    // Show TP3, TDB, CM courses, or events with no courseType (general events)
+                    event.courseType == null ||
+                            event.courseType == "TP3" ||
+                            event.courseType == "TDB" ||
+                            event.courseType == "CM"
+                }
+            }
+
+            TPGroup.TP4 -> {
+                currentState.allEvents.filter { event ->
+                    // Show TP4, TDB, CM courses, or events with no courseType (general events)
+                    event.courseType == null ||
+                            event.courseType == "TP4" ||
+                            event.courseType == "TDB" ||
+                            event.courseType == "CM"
+                }
+            }
+        }
+        _uiState.value = currentState.copy(events = filteredEvents)
     }
 }
 
 data class CalendarUiState @OptIn(ExperimentalTime::class) constructor(
     val events: List<Event> = emptyList(),
+    val allEvents: List<Event> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
     val viewMode: CalendarViewMode = CalendarViewMode.WEEK,
     val selectedDate: LocalDate = Clock.System.now()
-        .toLocalDateTime(TimeZone.currentSystemDefault()).date
+        .toLocalDateTime(TimeZone.currentSystemDefault()).date,
+    val selectedEvent: Event? = null,
+    val selectedTPGroup: TPGroup = TPGroup.ALL,
+    val selectedDayForCourseList: LocalDate? = null,
+    val showSettings: Boolean = false
 )
