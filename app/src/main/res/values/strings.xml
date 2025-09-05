@@ -1,3 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">PlanItBetter</string>
+    <string name="settings">Settings</string>
+    <string name="refresh">Refresh</string>
+    <string name="retry">Retry</string>
+    <string name="day">Day</string>
+    <string name="week">Week</string>
+    <string name="month">Month</string>
+    <string name="previous">Previous</string>
+    <string name="next">Next</string>
+    <string name="no_events_for_day">No events for this day</string>
+    <string name="error_format">Error: %1$s</string>
+
+    <!-- Day summary -->
+    <string name="day_summary">Day Summary</string>
+    <string name="start">Start</string>
+    <string name="end">End</string>
+    <string name="events">Events</string>
+    <string name="work_time">Work Time</string>
+    <string name="pause_time">Pause Time</string>
+    <string name="none">None</string>
+    <string name="pause_prefix">P:%1$s</string>
+
+    <!-- Weekday short names -->
+    <string name="mon">Mon</string>
+    <string name="tue">Tue</string>
+    <string name="wed">Wed</string>
+    <string name="thu">Thu</string>
+    <string name="fri">Fri</string>
+    <string name="sat">Sat</string>
+    <string name="sun">Sun</string>
+
+    <!-- Full weekday names -->
+    <string name="monday">Monday</string>
+    <string name="tuesday">Tuesday</string>
+    <string name="wednesday">Wednesday</string>
+    <string name="thursday">Thursday</string>
+    <string name="friday">Friday</string>
+    <string name="saturday">Saturday</string>
+    <string name="sunday">Sunday</string>
+
+    <!-- Month view -->
+    <string name="no_courses_for_day">No courses for this day</string>
+    <string name="courses">Courses</string>
+    <string name="courses_icon_desc">Courses</string>
+
+    <!-- General labels and descriptions -->
+    <string name="time">Time</string>
+    <string name="location">Location</string>
+    <string name="instructor">Instructor</string>
+    <string name="groups">Groups</string>
+    <string name="notes">Notes</string>
+    <string name="tap_for_details">Tap for details</string>
+    <string name="view_details">View details</string>
+
+    <!-- Duration strings -->
+    <string name="duration_label">Duration</string>
+    <string name="duration_format">Duration: %1$s</string>
+    <string name="duration">Duration</string>
+
+    <!-- Misc -->
+    <string name="more_format">+%1$d more</string>
+    <string name="pause_short">P:%1$s</string>
+
+    <!-- Settings -->
+    <string name="configure_your_calendar_preferences">Configure your calendar preferences</string>
+    <string name="tp_group_filter">TP Group Filter</string>
+    <string name="choose_which_tp_group_events_to_display">Choose which TP group events to display</string>
+    <string name="all_label">All</string>
+    <string name="tp1_label">TP1</string>
+    <string name="tp2_label">TP2</string>
+    <string name="tp3_label">TP3</string>
+    <string name="tp4_label">TP4</string>
+    <string name="current_filter">Current filter</string>
+    <string name="showing_all_events_regardless_of_tp_group">Showing all events regardless of TP group</string>
+    <string name="showing_tp1_tda_cm_courses_and_general_events">Showing TP1 (TDA, CM courses and general events)</string>
+    <string name="showing_tp2_tda_cm_courses_and_general_events">Showing TP2 (TDA, CM courses and general events)</string>
+    <string name="showing_tp3_tdb_cm_courses_and_general_events">Showing TP3 (TDB, CM courses and general events)</string>
+    <string name="showing_tp4_tdb_cm_courses_and_general_events">Showing TP4 (TDB, CM courses and general events)</string>
+    <string name="more_settings_will_be_available_in_future_updates">More settings will be available in future updates</string>
+
+    <string name="tap_to_view_full_details">Tap to view full details</string>
+    <string name="last_updated">Last updated</string>
+
+    <!-- Additional strings -->
+    <string name="schedule">Schedule</string>
+    <string name="date">Date</string>
+
+    <!-- Content descriptions -->
+    <string name="day_summary_desc">Day summary</string>
+    <string name="time_desc">Time</string>
+    <string name="location_desc">Location</string>
+    <string name="instructor_desc">Instructor</string>
+    <string name="groups_desc">Groups</string>
+    <string name="no_events_desc">No events</string>
+    <string name="start_time_desc">Start time</string>
+    <string name="end_time_desc">End time</string>
+    <string name="duration_desc">Duration</string>
+    <string name="settings_desc">Settings</string>
 </resources>

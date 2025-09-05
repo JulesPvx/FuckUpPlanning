@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PlanItBetter</string>
+    <string name="settings">Paramètres</string>
+    <string name="refresh">Actualiser</string>
+    <string name="retry">Réessayer</string>
+    <string name="day">Jour</string>
+    <string name="week">Semaine</string>
+    <string name="month">Mois</string>
+    <string name="previous">Précédent</string>
+    <string name="next">Suivant</string>
+    <string name="no_events_for_day">Aucun événement pour ce jour</string>
+    <string name="error_format">Erreur : %1$s</string>
+
+    <!-- Day summary -->
+    <string name="day_summary">Récapitulatif</string>
+    <string name="start">Début</string>
+    <string name="end">Fin</string>
+    <string name="events">Événements</string>
+    <string name="work_time">Temps de travail</string>
+    <string name="pause_time">Temps de pause</string>
+    <string name="none">Aucun</string>
+    <string name="pause_prefix">P:%1$s</string>
+
+    <!-- Weekday short names -->
+    <string name="mon">Lun</string>
+    <string name="tue">Mar</string>
+    <string name="wed">Mer</string>
+    <string name="thu">Jeu</string>
+    <string name="fri">Ven</string>
+    <string name="sat">Sam</string>
+    <string name="sun">Dim</string>
+
+    <!-- Full weekday names -->
+    <string name="monday">Lundi</string>
+    <string name="tuesday">Mardi</string>
+    <string name="wednesday">Mercredi</string>
+    <string name="thursday">Jeudi</string>
+    <string name="friday">Vendredi</string>
+    <string name="saturday">Samedi</string>
+    <string name="sunday">Dimanche</string>
+
+    <!-- Month view -->
+    <string name="no_courses_for_day">Aucun cours pour ce jour</string>
+    <string name="courses">Cours</string>
+    <string name="courses_icon_desc">Cours</string>
+
+    <!-- General labels and descriptions -->
+    <string name="time">Heure</string>
+    <string name="location">Lieu</string>
+    <string name="instructor">Enseignant</string>
+    <string name="groups">Groupes</string>
+    <string name="notes">Notes</string>
+    <string name="tap_for_details">Appuyez pour voir les détails</string>
+    <string name="view_details">Voir les détails</string>
+
+    <!-- Duration strings -->
+    <string name="duration_label">Durée</string>
+    <string name="duration_format">Durée : %1$s</string>
+    <string name="duration">Durée</string>
+
+    <!-- Misc -->
+    <string name="more_format">+%1$d de plus</string>
+    <string name="pause_short">P:%1$s</string>
+
+    <!-- Settings -->
+    <string name="configure_your_calendar_preferences">Configurez les préférences du calendrier</string>
+    <string name="tp_group_filter">Filtre Groupe TP</string>
+    <string name="choose_which_tp_group_events_to_display">Choisissez quel groupe TP afficher</string>
+    <string name="all_label">Tous</string>
+    <string name="tp1_label">TP1</string>
+    <string name="tp2_label">TP2</string>
+    <string name="tp3_label">TP3</string>
+    <string name="tp4_label">TP4</string>
+    <string name="current_filter">Filtre actuel</string>
+    <string name="showing_all_events_regardless_of_tp_group">Affiche tous les événements quel que soit le groupe TP</string>
+    <string name="showing_tp1_tda_cm_courses_and_general_events">Affiche TP1 (TDA, cours CM et événements généraux)</string>
+    <string name="showing_tp2_tda_cm_courses_and_general_events">Affiche TP2 (TDA, cours CM et événements généraux)</string>
+    <string name="showing_tp3_tdb_cm_courses_and_general_events">Affiche TP3 (TDB, cours CM et événements généraux)</string>
+    <string name="showing_tp4_tdb_cm_courses_and_general_events">Affiche TP4 (TDB, cours CM et événements généraux)</string>
+    <string name="more_settings_will_be_available_in_future_updates">D&#39;autres paramètres seront disponibles dans de futures mises à jour</string>
+
+    <string name="tap_to_view_full_details">Appuyez pour voir tous les détails</string>
+    <string name="last_updated">Dernière mise à jour</string>
+
+    <!-- Additional strings -->
+    <string name="schedule">Horaire</string>
+    <string name="date">Date</string>
+
+    <!-- Content descriptions -->
+    <string name="day_summary_desc">Récapitulatif de la journée</string>
+    <string name="time_desc">Heure</string>
+    <string name="location_desc">Lieu</string>
+    <string name="instructor_desc">Enseignant</string>
+    <string name="groups_desc">Groupes</string>
+    <string name="no_events_desc">Pas d&#39;événements</string>
+    <string name="start_time_desc">Heure de début</string>
+    <string name="end_time_desc">Heure de fin</string>
+    <string name="duration_desc">Durée</string>
+    <string name="settings_desc">Paramètres</string>
+</resources>

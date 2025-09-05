@@ -61,11 +61,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import fr.uptrash.fuckupplanning.R
 import fr.uptrash.fuckupplanning.data.model.Event
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
@@ -91,17 +93,23 @@ fun CalendarScreen(
         modifier = modifier,
         topBar = {
             TopAppBar(
-                title = { Text("PlanItBetter", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.app_name), fontWeight = FontWeight.Bold) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 ),
                 actions = {
                     IconButton(onClick = { viewModel.showSettings() }) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                        Icon(
+                            Icons.Default.Settings,
+                            contentDescription = stringResource(R.string.settings)
+                        )
                     }
                     IconButton(onClick = { viewModel.loadEvents() }) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Refresh")
+                        Icon(
+                            Icons.Default.Refresh,
+                            contentDescription = stringResource(R.string.refresh)
+                        )
                     }
                 }
             )
@@ -140,7 +148,7 @@ fun CalendarScreen(
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                text = "Error: ${uiState.error}",
+                                text = stringResource(R.string.error_format, uiState.error ?: ""),
                                 color = MaterialTheme.colorScheme.error,
                                 style = MaterialTheme.typography.bodyLarge
                             )
@@ -151,7 +159,7 @@ fun CalendarScreen(
                                     containerColor = MaterialTheme.colorScheme.error
                                 )
                             ) {
-                                Text("Retry")
+                                Text(stringResource(R.string.retry))
                             }
                         }
                     }
@@ -272,7 +280,7 @@ fun CalendarHeader(
                         )
                     }
                 ) {
-                    Text("Day")
+                    Text(stringResource(R.string.day))
                 }
                 SegmentedButton(
                     shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3),
@@ -286,7 +294,7 @@ fun CalendarHeader(
                         )
                     }
                 ) {
-                    Text("Week")
+                    Text(stringResource(R.string.week))
                 }
                 SegmentedButton(
                     shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3),
@@ -300,7 +308,7 @@ fun CalendarHeader(
                         )
                     }
                 ) {
-                    Text("Month")
+                    Text(stringResource(R.string.month))
                 }
             }
 
@@ -313,7 +321,10 @@ fun CalendarHeader(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onPreviousClick) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Previous")
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(R.string.previous)
+                    )
                 }
 
                 Text(
@@ -325,7 +336,10 @@ fun CalendarHeader(
                 )
 
                 IconButton(onClick = onNextClick) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Next")
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = stringResource(R.string.next)
+                    )
                 }
             }
         }
@@ -359,7 +373,7 @@ fun DayView(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "No events for this day",
+                        text = stringResource(R.string.no_events_for_day),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -427,12 +441,12 @@ fun DayTimeSummary(modifier: Modifier = Modifier, events: List<Event>) {
             ) {
                 Icon(
                     Icons.Default.DateRange,
-                    contentDescription = "Day Summary",
+                    contentDescription = stringResource(R.string.day_summary_desc),
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(24.dp)
                 )
                 Text(
-                    text = "Day Summary",
+                    text = stringResource(R.string.day_summary),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -449,7 +463,7 @@ fun DayTimeSummary(modifier: Modifier = Modifier, events: List<Event>) {
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        text = "Start",
+                        text = stringResource(R.string.start),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                     )
@@ -467,7 +481,7 @@ fun DayTimeSummary(modifier: Modifier = Modifier, events: List<Event>) {
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        text = "End",
+                        text = stringResource(R.string.end),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                     )
@@ -485,7 +499,7 @@ fun DayTimeSummary(modifier: Modifier = Modifier, events: List<Event>) {
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        text = "Events",
+                        text = stringResource(R.string.events),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                     )
@@ -509,7 +523,7 @@ fun DayTimeSummary(modifier: Modifier = Modifier, events: List<Event>) {
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        text = "Work Time",
+                        text = stringResource(R.string.work_time),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                     )
@@ -527,12 +541,14 @@ fun DayTimeSummary(modifier: Modifier = Modifier, events: List<Event>) {
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        text = "Pause Time",
+                        text = stringResource(R.string.pause_time),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                     )
                     Text(
-                        text = if (totalPauseMinutes > 0) formatDuration(totalPauseMinutes) else "None",
+                        text = if (totalPauseMinutes > 0) formatDuration(totalPauseMinutes) else stringResource(
+                            R.string.none
+                        ),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = if (totalPauseMinutes > 0) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onPrimaryContainer.copy(
@@ -623,9 +639,15 @@ fun MonthView(
                     .padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                listOf("Mon", "Tue", "Wed", "Thu", "Fri").forEach { dayName ->
+                listOf(
+                    DayOfWeek.MONDAY,
+                    DayOfWeek.TUESDAY,
+                    DayOfWeek.WEDNESDAY,
+                    DayOfWeek.THURSDAY,
+                    DayOfWeek.FRIDAY
+                ).forEach { dow ->
                     Text(
-                        text = dayName,
+                        text = getDayOfWeekDisplayName(dow, full = false),
                         modifier = Modifier.weight(1f),
                         textAlign = TextAlign.Center,
                         style = MaterialTheme.typography.labelLarge,
@@ -796,7 +818,10 @@ fun EnhancedMonthDayCell(
                 // Pause time (only if there are multiple events and pauses)
                 if (totalPauseMinutes > 0) {
                     Text(
-                        text = "P:${formatDuration(totalPauseMinutes)}",
+                        text = stringResource(
+                            R.string.pause_short,
+                            formatDuration(totalPauseMinutes)
+                        ),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Medium,
                         color = contentColor.copy(alpha = 0.8f)
@@ -881,7 +906,7 @@ fun WeekDayCard(
                 if (events.size > 3) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "+${events.size - 3} more",
+                        text = stringResource(R.string.more_format, events.size - 3),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Medium
@@ -1004,7 +1029,7 @@ fun EnhancedEventCard(event: Event, onClick: () -> Unit) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             Icons.Default.DateRange,
-                            contentDescription = "Time",
+                            contentDescription = stringResource(R.string.time_desc),
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(20.dp)
                         )
@@ -1052,7 +1077,7 @@ fun EnhancedEventCard(event: Event, onClick: () -> Unit) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 Icons.Default.LocationOn,
-                                contentDescription = "Location",
+                                contentDescription = stringResource(R.string.location_desc),
                                 tint = MaterialTheme.colorScheme.secondary,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -1083,7 +1108,7 @@ fun EnhancedEventCard(event: Event, onClick: () -> Unit) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 Icons.Default.Person,
-                                contentDescription = "Instructor",
+                                contentDescription = stringResource(R.string.instructor_desc),
                                 tint = MaterialTheme.colorScheme.tertiary,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -1114,7 +1139,7 @@ fun EnhancedEventCard(event: Event, onClick: () -> Unit) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 Icons.Default.Group,
-                                contentDescription = "Groups",
+                                contentDescription = stringResource(R.string.groups_desc),
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -1123,7 +1148,7 @@ fun EnhancedEventCard(event: Event, onClick: () -> Unit) {
                     Spacer(modifier = Modifier.width(16.dp))
                     Column {
                         Text(
-                            text = "Groups",
+                            text = stringResource(R.string.groups),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -1149,20 +1174,16 @@ fun EnhancedEventCard(event: Event, onClick: () -> Unit) {
                                 }
                             }
                             if (event.groups.size > 4) {
-                                Surface(
-                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
-                                    shape = RoundedCornerShape(8.dp)
-                                ) {
-                                    Text(
-                                        text = "+${event.groups.size - 4}",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.padding(
-                                            horizontal = 8.dp,
-                                            vertical = 4.dp
-                                        )
-                                    )
-                                }
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = stringResource(
+                                        R.string.more_format,
+                                        event.groups.size - 3
+                                    ),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Medium
+                                )
                             }
                         }
                     }
@@ -1179,7 +1200,7 @@ fun EnhancedEventCard(event: Event, onClick: () -> Unit) {
                 ) {
                     Column(modifier = Modifier.padding(12.dp)) {
                         Text(
-                            text = "Notes",
+                            text = stringResource(R.string.notes),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -1205,7 +1226,7 @@ fun EnhancedEventCard(event: Event, onClick: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Tap for details",
+                    text = stringResource(R.string.tap_for_details),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary,
                     fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
@@ -1213,7 +1234,7 @@ fun EnhancedEventCard(event: Event, onClick: () -> Unit) {
                 Spacer(modifier = Modifier.width(4.dp))
                 Icon(
                     Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = "View details",
+                    contentDescription = stringResource(R.string.view_details),
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(16.dp)
                 )
@@ -1313,7 +1334,7 @@ fun EventDetailView(
                 ) {
                     // Time & Date Section
                     EnhancedDetailSection(
-                        title = "Schedule",
+                        title = stringResource(R.string.schedule),
                         icon = Icons.Default.DateRange,
                         iconColor = MaterialTheme.colorScheme.primary
                     ) {
@@ -1325,7 +1346,7 @@ fun EventDetailView(
                             ) {
                                 Column {
                                     Text(
-                                        text = "Date",
+                                        text = stringResource(R.string.date),
                                         style = MaterialTheme.typography.labelLarge,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         fontWeight = FontWeight.Medium
@@ -1363,7 +1384,7 @@ fun EventDetailView(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 TimeDisplayCard(
-                                    label = "Start",
+                                    label = stringResource(R.string.start),
                                     time = formatTime(event.startDateTime),
                                     modifier = Modifier.weight(1f)
                                 )
@@ -1371,7 +1392,7 @@ fun EventDetailView(
                                 Spacer(modifier = Modifier.width(16.dp))
 
                                 TimeDisplayCard(
-                                    label = "End",
+                                    label = stringResource(R.string.end),
                                     time = formatTime(event.endDateTime),
                                     modifier = Modifier.weight(1f)
                                 )
@@ -1401,7 +1422,10 @@ fun EventDetailView(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = "Duration: ${formatDuration(durationMinutes)}",
+                                        text = stringResource(
+                                            R.string.duration_format,
+                                            formatDuration(durationMinutes)
+                                        ),
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.SemiBold,
                                         color = MaterialTheme.colorScheme.secondary
@@ -1414,7 +1438,7 @@ fun EventDetailView(
                     // Location Section
                     if (!event.location.isNullOrBlank()) {
                         EnhancedDetailSection(
-                            title = "Location",
+                            title = stringResource(R.string.location),
                             icon = Icons.Default.LocationOn,
                             iconColor = MaterialTheme.colorScheme.secondary
                         ) {
@@ -1437,7 +1461,7 @@ fun EventDetailView(
                     // Instructor Section
                     if (!event.instructor.isNullOrBlank()) {
                         EnhancedDetailSection(
-                            title = "Instructor",
+                            title = stringResource(R.string.instructor),
                             icon = Icons.Default.Person,
                             iconColor = MaterialTheme.colorScheme.tertiary
                         ) {
@@ -1460,7 +1484,7 @@ fun EventDetailView(
                     // Groups Section
                     if (event.groups.isNotEmpty()) {
                         EnhancedDetailSection(
-                            title = "Groups",
+                            title = stringResource(R.string.groups),
                             icon = Icons.Default.Group,
                             iconColor = MaterialTheme.colorScheme.primary
                         ) {
@@ -1492,7 +1516,7 @@ fun EventDetailView(
                     // Notes Section
                     if (!event.notes.isNullOrBlank()) {
                         EnhancedDetailSection(
-                            title = "Notes",
+                            title = stringResource(R.string.notes),
                             icon = Icons.Default.School,
                             iconColor = MaterialTheme.colorScheme.secondary
                         ) {
@@ -1530,7 +1554,7 @@ fun EventDetailView(
                                 verticalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 Text(
-                                    text = "Last Updated",
+                                    text = stringResource(R.string.last_updated),
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -1738,12 +1762,12 @@ fun DayCourseListView(
                             ) {
                                 Icon(
                                     Icons.Default.DateRange,
-                                    contentDescription = "No events",
+                                    contentDescription = stringResource(R.string.no_events_desc),
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.size(48.dp)
                                 )
                                 Text(
-                                    text = "No courses for this day",
+                                    text = stringResource(R.string.no_courses_for_day),
                                     style = MaterialTheme.typography.titleLarge,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     textAlign = TextAlign.Center
@@ -1763,14 +1787,14 @@ fun DayCourseListView(
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
                                         Icons.Default.School,
-                                        contentDescription = "Courses",
+                                        contentDescription = stringResource(R.string.courses_icon_desc),
                                         tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(20.dp)
                                     )
                                 }
                             }
                             Text(
-                                text = "Courses",
+                                text = stringResource(R.string.courses),
                                 style = MaterialTheme.typography.headlineSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -1881,14 +1905,14 @@ fun DayCourseItem(
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     Icons.Default.DateRange,
-                                    contentDescription = "Start time",
+                                    contentDescription = stringResource(R.string.start_time_desc),
                                     tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
                         }
                         Text(
-                            text = "Start",
+                            text = stringResource(R.string.start),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontWeight = FontWeight.Medium
@@ -1926,14 +1950,14 @@ fun DayCourseItem(
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     Icons.Default.DateRange,
-                                    contentDescription = "End time",
+                                    contentDescription = stringResource(R.string.end_time_desc),
                                     tint = MaterialTheme.colorScheme.secondary,
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
                         }
                         Text(
-                            text = "End",
+                            text = stringResource(R.string.end),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontWeight = FontWeight.Medium
@@ -1971,24 +1995,21 @@ fun DayCourseItem(
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     Icons.Default.DateRange,
-                                    contentDescription = "Duration",
+                                    contentDescription = stringResource(R.string.duration_desc),
                                     tint = MaterialTheme.colorScheme.tertiary,
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
                         }
-                        Text(
-                            text = "Duration",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = FontWeight.Medium
-                        )
                         val startMinutes =
                             event.startDateTime.hour * 60 + event.startDateTime.minute
                         val endMinutes = event.endDateTime.hour * 60 + event.endDateTime.minute
                         val durationMinutes = endMinutes - startMinutes
                         Text(
-                            text = formatDuration(durationMinutes),
+                            text = stringResource(
+                                R.string.duration_format,
+                                formatDuration(durationMinutes)
+                            ),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.tertiary
@@ -2016,7 +2037,7 @@ fun DayCourseItem(
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     Icons.Default.LocationOn,
-                                    contentDescription = "Location",
+                                    contentDescription = stringResource(R.string.location_desc),
                                     tint = MaterialTheme.colorScheme.secondary,
                                     modifier = Modifier.size(20.dp)
                                 )
@@ -2024,7 +2045,7 @@ fun DayCourseItem(
                         }
                         Column {
                             Text(
-                                text = "Location",
+                                text = stringResource(R.string.location),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontWeight = FontWeight.Medium
@@ -2059,7 +2080,7 @@ fun DayCourseItem(
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     Icons.Default.Person,
-                                    contentDescription = "Instructor",
+                                    contentDescription = stringResource(R.string.instructor_desc),
                                     tint = MaterialTheme.colorScheme.tertiary,
                                     modifier = Modifier.size(20.dp)
                                 )
@@ -2067,7 +2088,7 @@ fun DayCourseItem(
                         }
                         Column {
                             Text(
-                                text = "Instructor",
+                                text = stringResource(R.string.instructor),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontWeight = FontWeight.Medium
@@ -2113,7 +2134,7 @@ fun DayCourseItem(
                             }
                         }
                         Text(
-                            text = "Tap to view full details",
+                            text = stringResource(R.string.tap_to_view_full_details),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Medium
@@ -2121,7 +2142,7 @@ fun DayCourseItem(
                     }
                     Icon(
                         Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = "View details",
+                        contentDescription = stringResource(R.string.view_details),
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
                     )
@@ -2174,7 +2195,7 @@ fun SettingsView(
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     Icons.Default.Settings,
-                                    contentDescription = "Settings",
+                                    contentDescription = stringResource(R.string.settings_desc),
                                     tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(24.dp)
                                 )
@@ -2182,13 +2203,13 @@ fun SettingsView(
                         }
                         Column {
                             Text(
-                                text = "Settings",
+                                text = stringResource(R.string.settings),
                                 style = MaterialTheme.typography.headlineLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                             Text(
-                                text = "Configure your calendar preferences",
+                                text = stringResource(R.string.configure_your_calendar_preferences),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                             )
@@ -2243,13 +2264,13 @@ fun SettingsView(
                                 }
                                 Column {
                                     Text(
-                                        text = "TP Group Filter",
+                                        text = stringResource(R.string.tp_group_filter),
                                         style = MaterialTheme.typography.titleLarge,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onSecondaryContainer
                                     )
                                     Text(
-                                        text = "Choose which TP group events to display",
+                                        text = stringResource(R.string.choose_which_tp_group_events_to_display),
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onSecondaryContainer.copy(
                                             alpha = 0.8f
@@ -2285,11 +2306,11 @@ fun SettingsView(
                                     ) {
                                         Text(
                                             text = when (tpGroup) {
-                                                TPGroup.ALL -> "All"
-                                                TPGroup.TP1 -> "TP1"
-                                                TPGroup.TP2 -> "TP2"
-                                                TPGroup.TP3 -> "TP3"
-                                                TPGroup.TP4 -> "TP4"
+                                                TPGroup.ALL -> stringResource(R.string.all_label)
+                                                TPGroup.TP1 -> stringResource(R.string.tp1_label)
+                                                TPGroup.TP2 -> stringResource(R.string.tp2_label)
+                                                TPGroup.TP3 -> stringResource(R.string.tp3_label)
+                                                TPGroup.TP4 -> stringResource(R.string.tp4_label)
                                             },
                                             style = MaterialTheme.typography.labelMedium,
                                             fontWeight = if (selectedTPGroup == tpGroup) FontWeight.Bold else FontWeight.Medium
@@ -2309,7 +2330,7 @@ fun SettingsView(
                                     verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     Text(
-                                        text = "Current Filter",
+                                        text = stringResource(R.string.current_filter),
                                         style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.SemiBold,
                                         color = MaterialTheme.colorScheme.primary
@@ -2317,7 +2338,7 @@ fun SettingsView(
                                     when (selectedTPGroup) {
                                         TPGroup.ALL -> {
                                             Text(
-                                                text = "Showing all events regardless of TP group",
+                                                text = stringResource(R.string.showing_all_events_regardless_of_tp_group),
                                                 style = MaterialTheme.typography.bodyMedium,
                                                 color = MaterialTheme.colorScheme.onSurface
                                             )
@@ -2325,7 +2346,7 @@ fun SettingsView(
 
                                         TPGroup.TP1 -> {
                                             Text(
-                                                text = "Showing TP1, TDA, CM courses, and general events",
+                                                text = stringResource(R.string.showing_tp1_tda_cm_courses_and_general_events),
                                                 style = MaterialTheme.typography.bodyMedium,
                                                 color = MaterialTheme.colorScheme.onSurface
                                             )
@@ -2333,7 +2354,7 @@ fun SettingsView(
 
                                         TPGroup.TP2 -> {
                                             Text(
-                                                text = "Showing TP2, TDA, CM courses, and general events",
+                                                text = stringResource(R.string.showing_tp2_tda_cm_courses_and_general_events),
                                                 style = MaterialTheme.typography.bodyMedium,
                                                 color = MaterialTheme.colorScheme.onSurface
                                             )
@@ -2341,7 +2362,7 @@ fun SettingsView(
 
                                         TPGroup.TP3 -> {
                                             Text(
-                                                text = "Showing TP3, TDB, CM courses, and general events",
+                                                text = stringResource(R.string.showing_tp3_tdb_cm_courses_and_general_events),
                                                 style = MaterialTheme.typography.bodyMedium,
                                                 color = MaterialTheme.colorScheme.onSurface
                                             )
@@ -2349,7 +2370,7 @@ fun SettingsView(
 
                                         TPGroup.TP4 -> {
                                             Text(
-                                                text = "Showing TP4, TDB, CM courses, and general events",
+                                                text = stringResource(R.string.showing_tp4_tdb_cm_courses_and_general_events),
                                                 style = MaterialTheme.typography.bodyMedium,
                                                 color = MaterialTheme.colorScheme.onSurface
                                             )
@@ -2362,7 +2383,7 @@ fun SettingsView(
 
                     // Future settings can be added here
                     Text(
-                        text = "More settings will be available in future updates",
+                        text = stringResource(R.string.more_settings_will_be_available_in_future_updates),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
@@ -2406,15 +2427,16 @@ private fun formatTime(dateTime: LocalDateTime): String {
             dateTime.minute.toString().padStart(2, '0')
 }
 
+@Composable
 private fun getDayOfWeekDisplayName(dayOfWeek: DayOfWeek, full: Boolean): String {
     return when (dayOfWeek) {
-        DayOfWeek.MONDAY -> if (full) "Monday" else "Mon"
-        DayOfWeek.TUESDAY -> if (full) "Tuesday" else "Tue"
-        DayOfWeek.WEDNESDAY -> if (full) "Wednesday" else "Wed"
-        DayOfWeek.THURSDAY -> if (full) "Thursday" else "Thu"
-        DayOfWeek.FRIDAY -> if (full) "Friday" else "Fri"
-        DayOfWeek.SATURDAY -> if (full) "Saturday" else "Sat"
-        DayOfWeek.SUNDAY -> if (full) "Sunday" else "Sun"
+        DayOfWeek.MONDAY -> if (full) stringResource(R.string.monday) else stringResource(R.string.mon)
+        DayOfWeek.TUESDAY -> if (full) stringResource(R.string.tuesday) else stringResource(R.string.tue)
+        DayOfWeek.WEDNESDAY -> if (full) stringResource(R.string.wednesday) else stringResource(R.string.wed)
+        DayOfWeek.THURSDAY -> if (full) stringResource(R.string.thursday) else stringResource(R.string.thu)
+        DayOfWeek.FRIDAY -> if (full) stringResource(R.string.friday) else stringResource(R.string.fri)
+        DayOfWeek.SATURDAY -> if (full) stringResource(R.string.saturday) else stringResource(R.string.sat)
+        DayOfWeek.SUNDAY -> if (full) stringResource(R.string.sunday) else stringResource(R.string.sun)
     }
 }
 
