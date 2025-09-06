@@ -26,7 +26,107 @@ class ICalParser @Inject constructor() {
             i++
         }
 
-        return events.sortedBy { it.startDateTime }
+        // Merge events with same summary and location
+        val mergedEvents = mergeEventsWithSameNameAndLocation(events)
+
+        return mergedEvents.sortedBy { it.startDateTime }
+    }
+
+    private fun mergeEventsWithSameNameAndLocation(events: List<Event>): List<Event> {
+        val groupedEvents = events.groupBy { event ->
+            // Group by summary and location (both must match)
+            Pair(event.summary, event.location)
+        }
+
+        val mergedEvents = mutableListOf<Event>()
+
+        for ((_, eventGroup) in groupedEvents) {
+            if (eventGroup.size == 1) {
+                // No merging needed for single events
+                mergedEvents.add(eventGroup.first())
+            } else {
+                // Sort events by start time and merge adjacent/overlapping ones
+                val sortedEvents = eventGroup.sortedBy { it.startDateTime }
+                val merged = mergeAdjacentEvents(sortedEvents)
+                mergedEvents.addAll(merged)
+            }
+        }
+
+        return mergedEvents
+    }
+
+    private fun mergeAdjacentEvents(sortedEvents: List<Event>): List<Event> {
+        if (sortedEvents.isEmpty()) return emptyList()
+
+        val merged = mutableListOf<Event>()
+        var currentEvent = sortedEvents.first()
+
+        for (i in 1 until sortedEvents.size) {
+            val nextEvent = sortedEvents[i]
+
+            // Check if events are adjacent or overlapping
+            if (currentEvent.endDateTime >= nextEvent.startDateTime) {
+                // Merge the events
+                currentEvent = mergeEvents(currentEvent, nextEvent)
+            } else {
+                // Events are not adjacent, add current to result and start new
+                merged.add(currentEvent)
+                currentEvent = nextEvent
+            }
+        }
+
+        // Add the last event
+        merged.add(currentEvent)
+        return merged
+    }
+
+    private fun mergeEvents(event1: Event, event2: Event): Event {
+        // Take the earliest start time and latest end time
+        val startDateTime =
+            if (event1.startDateTime <= event2.startDateTime) event1.startDateTime else event2.startDateTime
+        val endDateTime =
+            if (event1.endDateTime >= event2.endDateTime) event1.endDateTime else event2.endDateTime
+
+        // Combine UIDs to track merged events
+        val combinedUid = "${event1.uid},${event2.uid}"
+
+        // Merge descriptions, notes, and other fields
+        val combinedDescription = listOfNotNull(event1.description, event2.description)
+            .distinct()
+            .joinToString("\n")
+            .takeIf { it.isNotEmpty() }
+
+        val combinedNotes = listOfNotNull(event1.notes, event2.notes)
+            .distinct()
+            .joinToString("\n")
+            .takeIf { it.isNotEmpty() }
+
+        val combinedGroups = (event1.groups + event2.groups).distinct()
+
+        // Use the most recent timestamps
+        val mostRecentEvent =
+            if (event1.lastModified.orEmpty() >= event2.lastModified.orEmpty()) event1 else event2
+
+        return Event(
+            uid = combinedUid,
+            summary = event1.summary, // They should be the same
+            description = combinedDescription,
+            startDateTime = startDateTime,
+            endDateTime = endDateTime,
+            location = event1.location, // They should be the same
+            courseType = event1.courseType ?: event2.courseType,
+            instructor = event1.instructor ?: event2.instructor,
+            groups = combinedGroups,
+            notes = combinedNotes,
+            lastUpdated = event1.lastUpdated ?: event2.lastUpdated,
+            dtstamp = mostRecentEvent.dtstamp,
+            created = if (event1.created.orEmpty() <= event2.created.orEmpty()) event1.created else event2.created,
+            lastModified = mostRecentEvent.lastModified,
+            sequence = maxOf(
+                event1.sequence?.toIntOrNull() ?: 0,
+                event2.sequence?.toIntOrNull() ?: 0
+            ).toString()
+        )
     }
 
     private fun parseEvent(lines: List<String>, startIndex: Int): Event? {

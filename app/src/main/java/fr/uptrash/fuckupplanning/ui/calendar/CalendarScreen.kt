@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.CalendarViewWeek
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.LocalDining
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
@@ -69,6 +70,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import fr.uptrash.fuckupplanning.R
 import fr.uptrash.fuckupplanning.data.model.Event
+import fr.uptrash.fuckupplanning.data.repository.RestaurantMenuRepository
+import fr.uptrash.fuckupplanning.data.repository.TPGroup
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
@@ -96,16 +99,28 @@ fun CalendarScreen(
                 title = { Text(stringResource(R.string.app_name), fontWeight = FontWeight.Bold) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    actionIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 ),
                 actions = {
+                    // Menu button for restaurant
+                    IconButton(onClick = { viewModel.showMenu() }) {
+                        Icon(
+                            Icons.Default.LocalDining,
+                            contentDescription = stringResource(R.string.restaurant_menu)
+                        )
+                    }
+
                     IconButton(onClick = { viewModel.showSettings() }) {
                         Icon(
                             Icons.Default.Settings,
                             contentDescription = stringResource(R.string.settings)
                         )
                     }
-                    IconButton(onClick = { viewModel.loadEvents() }) {
+                    IconButton(onClick = {
+                        viewModel.loadEvents()
+                    }) {
                         Icon(
                             Icons.Default.Refresh,
                             contentDescription = stringResource(R.string.refresh)
@@ -154,7 +169,9 @@ fun CalendarScreen(
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Button(
-                                onClick = { viewModel.loadEvents() },
+                                onClick = {
+                                    viewModel.loadEvents()
+                                },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = MaterialTheme.colorScheme.error
                                 )
@@ -242,6 +259,24 @@ fun CalendarScreen(
                     selectedTPGroup = uiState.selectedTPGroup,
                     onTPGroupChange = { viewModel.selectTPGroup(it) },
                     onDismiss = { viewModel.dismissSettings() }
+                )
+            }
+        }
+
+        // Restaurant Menu Modal
+        if (uiState.showMenu) {
+            ModalBottomSheet(
+                onDismissRequest = { viewModel.dismissMenu() },
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentWindowInsets = { WindowInsets(0.dp, 0.dp, 0.dp, 0.dp) },
+                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+            ) {
+                RestaurantMenuView(
+                    menu = uiState.restaurantMenu,
+                    isLoading = uiState.isMenuLoading,
+                    error = uiState.menuError,
+                    onDismiss = { viewModel.dismissMenu() },
+                    onRefresh = { viewModel.showMenu(forceRefresh = true) }
                 )
             }
         }
@@ -1886,6 +1921,32 @@ fun DayCourseItem(
                     .fillMaxWidth()
                     .padding(top = 8.dp)
             ) {
+                if (!event.courseType.isNullOrBlank()) {
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Surface(
+                        color = when (event.courseType) {
+                            "CM" -> MaterialTheme.colorScheme.primary
+                            "TDB" -> MaterialTheme.colorScheme.secondary
+                            "TD" -> MaterialTheme.colorScheme.tertiary
+                            else -> MaterialTheme.colorScheme.primary
+                        },
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Text(
+                            text = event.courseType,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = when (event.courseType) {
+                                "CM" -> MaterialTheme.colorScheme.onPrimary
+                                "TDB" -> MaterialTheme.colorScheme.onSecondary
+                                "TD" -> MaterialTheme.colorScheme.onTertiary
+                                else -> MaterialTheme.colorScheme.onPrimary
+                            },
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        )
+                    }
+                }
+
                 Row(
                     modifier = Modifier.padding(20.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly,
@@ -2006,13 +2067,16 @@ fun DayCourseItem(
                         val endMinutes = event.endDateTime.hour * 60 + event.endDateTime.minute
                         val durationMinutes = endMinutes - startMinutes
                         Text(
-                            text = stringResource(
-                                R.string.duration_format,
-                                formatDuration(durationMinutes)
-                            ),
+                            text = stringResource(R.string.duration),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = formatDuration(durationMinutes),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.tertiary
+                            color = MaterialTheme.colorScheme.secondary
                         )
                     }
                 }
@@ -2146,6 +2210,155 @@ fun DayCourseItem(
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
                     )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun RestaurantMenuView(
+    menu: Map<String, List<RestaurantMenuRepository.MenuItem>>,
+    isLoading: Boolean,
+    error: String?,
+    onDismiss: () -> Unit,
+    onRefresh: () -> Unit
+) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(0.dp),
+        verticalArrangement = Arrangement.spacedBy(0.dp)
+    ) {
+        // Header
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                ),
+                shape = RoundedCornerShape(
+                    topStart = 28.dp,
+                    topEnd = 28.dp,
+                    bottomStart = 0.dp,
+                    bottomEnd = 0.dp
+                )
+            ) {
+                Column(modifier = Modifier.padding(24.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = stringResource(R.string.menu_of_the_day),
+                                style = MaterialTheme.typography.headlineLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Text(
+                                text = stringResource(R.string.crous_r_u_crousty),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        item {
+            Surface(
+                color = MaterialTheme.colorScheme.surface
+            ) {
+                if (isLoading) {
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(48.dp),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                } else if (error != null) {
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(text = error, color = MaterialTheme.colorScheme.error)
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Button(onClick = onRefresh) {
+                                Text(text = stringResource(R.string.retry))
+                            }
+                        }
+                    }
+                } else {
+                    // Show menu content
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        if (menu.isEmpty()) {
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.no_menu_available),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        } else {
+                            menu.forEach { (category, items) ->
+                                Column(modifier = Modifier.fillMaxWidth()) {
+                                    Text(
+                                        text = category,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Spacer(modifier = Modifier.height(6.dp))
+
+                                    // Render each MenuItem with optional points badge
+                                    items.forEach { menuItem ->
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = menuItem.name,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+
+                                            Spacer(modifier = Modifier.weight(1f))
+
+                                            // Points badge if available
+                                            menuItem.points?.let { pts ->
+                                                Surface(
+                                                    color = MaterialTheme.colorScheme.primary.copy(
+                                                        alpha = 0.12f
+                                                    ),
+                                                    shape = RoundedCornerShape(12.dp)
+                                                ) {
+                                                    Text(
+                                                        text = "$pts pts",
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        color = MaterialTheme.colorScheme.primary,
+                                                        modifier = Modifier.padding(
+                                                            horizontal = 8.dp,
+                                                            vertical = 4.dp
+                                                        )
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -2444,7 +2657,7 @@ private fun formatDuration(totalMinutes: Int): String {
     val hours = totalMinutes / 60
     val minutes = totalMinutes % 60
     return when {
-        hours > 0 && minutes > 0 -> "${hours}h ${minutes}min"
+        hours > 0 && minutes > 0 -> "${hours}h${minutes}min"
         hours > 0 -> "${hours}h"
         else -> "${minutes}min"
     }

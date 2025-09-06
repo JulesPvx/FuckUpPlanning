@@ -1,10 +1,14 @@
 package fr.uptrash.fuckupplanning.ui.calendar
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import fr.uptrash.fuckupplanning.data.model.Event
 import fr.uptrash.fuckupplanning.data.repository.CalendarRepository
+import fr.uptrash.fuckupplanning.data.repository.RestaurantMenuRepository
+import fr.uptrash.fuckupplanning.data.repository.SettingsRepository
+import fr.uptrash.fuckupplanning.data.repository.TPGroup
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,17 +27,11 @@ enum class CalendarViewMode {
     DAY, WEEK, MONTH
 }
 
-enum class TPGroup {
-    ALL,
-    TP1,
-    TP2,
-    TP3,
-    TP4
-}
-
 @HiltViewModel
 class CalendarViewModel @Inject constructor(
-    private val repository: CalendarRepository
+    private val repository: CalendarRepository,
+    private val restaurantRepository: RestaurantMenuRepository,
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CalendarUiState())
@@ -43,10 +41,18 @@ class CalendarViewModel @Inject constructor(
         loadEvents()
     }
 
-    fun loadEvents() {
+    private fun loadSettings() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            settingsRepository.selectedTPGroupFlow.collect { tpGroup ->
+                selectTPGroup(tpGroup)
+            }
+        }
+    }
 
+    fun loadEvents() {
+        _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+
+        viewModelScope.launch {
             repository.getEvents().fold(
                 onSuccess = { events ->
                     _uiState.value = _uiState.value.copy(
@@ -54,7 +60,7 @@ class CalendarViewModel @Inject constructor(
                         isLoading = false,
                         error = null
                     )
-                    applyTPFilter()
+                    loadSettings()
                 },
                 onFailure = { exception ->
                     _uiState.value = _uiState.value.copy(
@@ -112,6 +118,9 @@ class CalendarViewModel @Inject constructor(
 
     fun selectTPGroup(tpGroup: TPGroup) {
         _uiState.value = _uiState.value.copy(selectedTPGroup = tpGroup)
+        viewModelScope.launch {
+            settingsRepository.saveSelectedTPGroup(tpGroup)
+        }
         applyTPFilter()
     }
 
@@ -123,8 +132,48 @@ class CalendarViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(showSettings = false)
     }
 
+    /**
+     * Show the restaurant menu modal. The menu is cached in uiState.restaurantMenu and
+     * will not be refetched unless [forceRefresh] is true or the cache is empty.
+     */
+    fun showMenu(forceRefresh: Boolean = false) {
+        val currentMenu = _uiState.value.restaurantMenu
+
+        // If we already have a menu and we're not forcing a refresh, just show it without refetching.
+        if (currentMenu.isNotEmpty() && !forceRefresh) {
+            _uiState.value =
+                _uiState.value.copy(showMenu = true, isMenuLoading = false, menuError = null)
+            return
+        }
+
+        // Otherwise, fetch the menu and update the cache.
+        _uiState.value =
+            _uiState.value.copy(showMenu = true, isMenuLoading = true, menuError = null)
+        viewModelScope.launch {
+            try {
+                val menu = restaurantRepository.fetchMenu()
+                _uiState.value = _uiState.value.copy(
+                    restaurantMenu = menu,
+                    isMenuLoading = false,
+                    menuError = null
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isMenuLoading = false,
+                    menuError = e.message ?: "Failed to load menu"
+                )
+            }
+        }
+    }
+
+    fun dismissMenu() {
+        _uiState.value = _uiState.value.copy(showMenu = false)
+    }
+
     private fun applyTPFilter() {
         val currentState = _uiState.value
+        Log.d("CalendarViewModel", "Applying TP filter: ${currentState.selectedTPGroup}")
+        Log.d("CalendarViewModel", "Total events before filter: ${currentState.allEvents.size}")
         val filteredEvents = when (currentState.selectedTPGroup) {
             TPGroup.ALL -> currentState.allEvents
             TPGroup.TP1 -> {
@@ -182,5 +231,11 @@ data class CalendarUiState @OptIn(ExperimentalTime::class) constructor(
     val selectedEvent: Event? = null,
     val selectedTPGroup: TPGroup = TPGroup.ALL,
     val selectedDayForCourseList: LocalDate? = null,
-    val showSettings: Boolean = false
+    val showSettings: Boolean = false,
+
+    // Restaurant menu UI state
+    val showMenu: Boolean = false,
+    val restaurantMenu: Map<String, List<RestaurantMenuRepository.MenuItem>> = emptyMap(),
+    val isMenuLoading: Boolean = false,
+    val menuError: String? = null
 )

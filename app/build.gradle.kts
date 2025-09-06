@@ -57,6 +57,10 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.converter.scalars)
 
+    // Jsoup for scraping restaurant menu
+    implementation(libs.jsoup)
+
+    implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.core.ktx)

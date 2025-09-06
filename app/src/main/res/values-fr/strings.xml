@@ -3,6 +3,7 @@
     <string name="app_name">PlanItBetter</string>
     <string name="settings">Paramètres</string>
     <string name="refresh">Actualiser</string>
+    <string name="dismiss">Fermer</string>
     <string name="retry">Réessayer</string>
     <string name="day">Jour</string>
     <string name="week">Semaine</string>
@@ -54,6 +55,12 @@
     <string name="tap_for_details">Appuyez pour voir les détails</string>
     <string name="view_details">Voir les détails</string>
 
+    <!-- Menu -->
+    <string name="restaurant_menu">Menu du restaurant</string>
+    <string name="menu_of_the_day">Menu du jour</string>
+    <string name="crous_r_u_crousty">Crous RU Crousty</string>
+    <string name="no_menu_available">Aucun menu disponible</string>
+
     <!-- Duration strings -->
     <string name="duration_label">Durée</string>
     <string name="duration_format">Durée : %1$s</string>
@@ -78,7 +85,7 @@
     <string name="showing_tp2_tda_cm_courses_and_general_events">Affiche TP2 (TDA, cours CM et événements généraux)</string>
     <string name="showing_tp3_tdb_cm_courses_and_general_events">Affiche TP3 (TDB, cours CM et événements généraux)</string>
     <string name="showing_tp4_tdb_cm_courses_and_general_events">Affiche TP4 (TDB, cours CM et événements généraux)</string>
-    <string name="more_settings_will_be_available_in_future_updates">D&#39;autres paramètres seront disponibles dans de futures mises à jour</string>
+    <string name="more_settings_will_be_available_in_future_updates">D\'autres paramètres seront disponibles dans de futures mises à jour</string>
 
     <string name="tap_to_view_full_details">Appuyez pour voir tous les détails</string>
     <string name="last_updated">Dernière mise à jour</string>
@@ -93,7 +100,7 @@
     <string name="location_desc">Lieu</string>
     <string name="instructor_desc">Enseignant</string>
     <string name="groups_desc">Groupes</string>
-    <string name="no_events_desc">Pas d&#39;événements</string>
+    <string name="no_events_desc">Pas d\'événements</string>
     <string name="start_time_desc">Heure de début</string>
     <string name="end_time_desc">Heure de fin</string>
     <string name="duration_desc">Durée</string>
