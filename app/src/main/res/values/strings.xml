@@ -2,6 +2,7 @@
 <resources>
     <string name="app_name">PlanItBetter</string>
     <string name="settings">Settings</string>
+    <string name="dismiss">Dismiss</string>
     <string name="refresh">Refresh</string>
     <string name="retry">Retry</string>
     <string name="day">Day</string>
@@ -53,6 +54,13 @@
     <string name="notes">Notes</string>
     <string name="tap_for_details">Tap for details</string>
     <string name="view_details">View details</string>
+
+    <!-- Menu -->
+    <string name="restaurant_menu">Restaurant Menu</string>
+    <string name="menu_of_the_day">Menu of the day</string>
+    <string name="crous_r_u_crousty">Crous RU Crousty</string>
+    <string name="no_menu_available">No menu available</string>
+
 
     <!-- Duration strings -->
     <string name="duration_label">Duration</string>
