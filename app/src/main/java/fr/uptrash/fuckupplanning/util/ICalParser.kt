@@ -32,10 +32,39 @@ class ICalParser @Inject constructor() {
         return mergedEvents.sortedBy { it.startDateTime }
     }
 
+    // Data class to use as a key for grouping events that can be merged
+    private data class EventMergeKey(
+        val summary: String,
+        val description: String?,
+        val location: String?,
+        val courseType: String?,
+        val instructor: String?,
+        val groups: List<String>,
+        val notes: String?,
+        val lastUpdated: String?,
+        val dtstamp: String?,
+        val created: String?,
+        val lastModified: String?,
+        val sequence: String?
+    )
+
     private fun mergeEventsWithSameNameAndLocation(events: List<Event>): List<Event> {
         val groupedEvents = events.groupBy { event ->
-            // Group by summary and location (both must match)
-            Pair(event.summary, event.location)
+            // Group by ALL fields except start and end times
+            EventMergeKey(
+                summary = event.summary,
+                description = event.description,
+                location = event.location,
+                courseType = event.courseType,
+                instructor = event.instructor,
+                groups = event.groups,
+                notes = event.notes,
+                lastUpdated = event.lastUpdated,
+                dtstamp = event.dtstamp,
+                created = event.created,
+                lastModified = event.lastModified,
+                sequence = event.sequence
+            )
         }
 
         val mergedEvents = mutableListOf<Event>()
