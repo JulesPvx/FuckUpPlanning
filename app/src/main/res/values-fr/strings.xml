@@ -23,6 +23,11 @@
     <string name="none">Aucun</string>
     <string name="pause_prefix">P:%1$s</string>
 
+    <!-- Week view -->
+    <string name="work_time_format">Temps de travail : %1$s</string>
+    <string name="more_events_format">+%1$d de plus</string>
+    <string name="no_events">Pas d\'événements</string>
+
     <!-- Weekday short names -->
     <string name="mon">Lun</string>
     <string name="tue">Mar</string>
@@ -93,6 +98,17 @@
     <!-- Additional strings -->
     <string name="schedule">Horaire</string>
     <string name="date">Date</string>
+
+    <!-- MMI Year Settings -->
+    <string name="mmi_year_selection">Sélection de l\'année MMI</string>
+    <string name="select_your_mmi_year">Sélectionnez votre année MMI</string>
+    <string name="mmi1_label">MMI 1</string>
+    <string name="mmi2_label">MMI 2</string>
+    <string name="mmi3_label">MMI 3</string>
+    <string name="current_year">Année actuelle</string>
+    <string name="showing_mmi1_calendar">Affiche le calendrier MMI 1</string>
+    <string name="showing_mmi2_calendar">Affiche le calendrier MMI 2</string>
+    <string name="showing_mmi3_calendar">Affiche le calendrier MMI 3</string>
 
     <!-- Content descriptions -->
     <string name="day_summary_desc">Récapitulatif de la journée</string>

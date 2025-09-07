@@ -23,6 +23,11 @@
     <string name="none">None</string>
     <string name="pause_prefix">P:%1$s</string>
 
+    <!-- Week view -->
+    <string name="work_time_format">Work Time: %1$s</string>
+    <string name="more_events_format">+%1$d more</string>
+    <string name="no_events">No events</string>
+
     <!-- Weekday short names -->
     <string name="mon">Mon</string>
     <string name="tue">Tue</string>
@@ -61,7 +66,6 @@
     <string name="crous_r_u_crousty">Crous RU Crousty</string>
     <string name="no_menu_available">No menu available</string>
 
-
     <!-- Duration strings -->
     <string name="duration_label">Duration</string>
     <string name="duration_format">Duration: %1$s</string>
@@ -94,6 +98,17 @@
     <!-- Additional strings -->
     <string name="schedule">Schedule</string>
     <string name="date">Date</string>
+
+    <!-- MMI Year Settings -->
+    <string name="mmi_year_selection">MMI Year</string>
+    <string name="select_your_mmi_year">Select your MMI formation year</string>
+    <string name="mmi1_label">MMI 1</string>
+    <string name="mmi2_label">MMI 2</string>
+    <string name="mmi3_label">MMI 3</string>
+    <string name="current_year">Current year</string>
+    <string name="showing_mmi1_calendar">Showing MMI 1 calendar</string>
+    <string name="showing_mmi2_calendar">Showing MMI 2 calendar</string>
+    <string name="showing_mmi3_calendar">Showing MMI 3 calendar</string>
 
     <!-- Content descriptions -->
     <string name="day_summary_desc">Day summary</string>

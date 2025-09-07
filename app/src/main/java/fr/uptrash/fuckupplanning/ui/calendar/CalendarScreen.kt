@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.CalendarViewDay
 import androidx.compose.material.icons.filled.CalendarViewMonth
 import androidx.compose.material.icons.filled.CalendarViewWeek
@@ -70,6 +71,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import fr.uptrash.fuckupplanning.R
 import fr.uptrash.fuckupplanning.data.model.Event
+import fr.uptrash.fuckupplanning.data.repository.MMIYear
 import fr.uptrash.fuckupplanning.data.repository.RestaurantMenuRepository
 import fr.uptrash.fuckupplanning.data.repository.TPGroup
 import kotlinx.datetime.DateTimeUnit
@@ -257,7 +259,9 @@ fun CalendarScreen(
             ) {
                 SettingsView(
                     selectedTPGroup = uiState.selectedTPGroup,
+                    selectedMMIYear = uiState.selectedMMIYear,
                     onTPGroupChange = { viewModel.selectTPGroup(it) },
+                    onMMIYearChange = { viewModel.selectMMIYear(it) },
                     onDismiss = { viewModel.dismissSettings() }
                 )
             }
@@ -625,7 +629,6 @@ fun WeekView(
             WeekDayCard(
                 date = day,
                 events = weekEvents[day] ?: emptyList(),
-                isSelected = day == selectedDate,
                 onEventClick = onEventClick
             )
         }
@@ -867,85 +870,221 @@ fun EnhancedMonthDayCell(
     }
 }
 
+@OptIn(ExperimentalTime::class)
 @Composable
 fun WeekDayCard(
     date: LocalDate,
     events: List<Event>,
-    isSelected: Boolean,
     onEventClick: (Event) -> Unit
 ) {
+    // Calculate time information for better display
+    val sortedEvents = events.sortedBy { it.startDateTime }
+    val firstEvent = sortedEvents.firstOrNull()
+    val lastEvent = sortedEvents.lastOrNull()
+
+    // Calculate total working time for the day
+    val totalWorkingMinutes = events.sumOf { event ->
+        val startMinutes = event.startDateTime.hour * 60 + event.startDateTime.minute
+        val endMinutes = event.endDateTime.hour * 60 + event.endDateTime.minute
+        endMinutes - startMinutes
+    }
+
+    // Check if it's today
+    val isToday = date == Clock.System.now()
+        .toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = if (isSelected)
-                MaterialTheme.colorScheme.primaryContainer
-            else
-                MaterialTheme.colorScheme.surfaceVariant
+            containerColor = when {
+                isToday -> MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f)
+                events.isNotEmpty() -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
+                else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            }
         ),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(16.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
+            // Enhanced header with date information
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top
             ) {
-                Column {
-                    Text(
-                        text = getDayOfWeekDisplayName(date.dayOfWeek, full = false),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = if (isSelected)
-                            MaterialTheme.colorScheme.onPrimaryContainer
-                        else
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    // Day of week with enhanced styling
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = getDayOfWeekDisplayName(date.dayOfWeek, full = false),
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            color = when {
+                                isToday -> MaterialTheme.colorScheme.primary
+                                else -> MaterialTheme.colorScheme.onSurfaceVariant
+                            }
+                        )
+
+                        // Today indicator
+                        if (isToday) {
+                            Surface(
+                                color = MaterialTheme.colorScheme.primary,
+                                shape = CircleShape,
+                                modifier = Modifier.size(6.dp)
+                            ) {}
+                        }
+                    }
+
+                    // Day number with enhanced typography
                     Text(
                         text = date.day.toString(),
-                        style = MaterialTheme.typography.headlineMedium,
+                        style = MaterialTheme.typography.headlineLarge,
                         fontWeight = FontWeight.Bold,
-                        color = if (isSelected)
-                            MaterialTheme.colorScheme.onPrimaryContainer
-                        else
-                            MaterialTheme.colorScheme.onSurface
+                        color = when {
+                            isToday -> MaterialTheme.colorScheme.primary
+                            else -> MaterialTheme.colorScheme.onSurface
+                        }
                     )
                 }
 
+                // Enhanced event count badge and time summary
                 if (events.isNotEmpty()) {
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Text(
-                                text = events.size.toString(),
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold
-                            )
+                    // Time range indicator
+                    if (firstEvent != null && lastEvent != null) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = formatTime(firstEvent.startDateTime),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Icon(
+                                    Icons.Default.ArrowDownward,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(12.dp)
+                                )
+                                Text(
+                                    text = formatTime(lastEvent.endDateTime),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
                     }
                 }
             }
 
+            // Enhanced events section
             if (events.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(12.dp))
-                events.take(3).forEach { event ->
-                    CompactEventItem(event = event, onClick = { onEventClick(event) })
-                    if (event != events.last() && events.indexOf(event) < 2) {
-                        Spacer(modifier = Modifier.height(4.dp))
+                // Working time summary bar
+                if (totalWorkingMinutes > 0) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.DateRange,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = stringResource(
+                                    R.string.work_time_format,
+                                    formatDuration(totalWorkingMinutes)
+                                ),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.secondary
+                            )
+                        }
                     }
                 }
-                if (events.size > 3) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = stringResource(R.string.more_format, events.size - 3),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Medium
-                    )
+
+                // Enhanced events list
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    events.take(3).forEachIndexed { index, event ->
+                        EnhancedCompactEventItem(
+                            event = event,
+                            onClick = { onEventClick(event) },
+                            isLast = index == minOf(2, events.size - 1)
+                        )
+                    }
+
+                    // More events indicator with better styling
+                    if (events.size > 3) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = stringResource(
+                                        R.string.more_events_format,
+                                        events.size - 3
+                                    ),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Icon(
+                                    Icons.AutoMirrored.Filled.ArrowForward,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            } else {
+                // Empty state with better styling
+                Surface(
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Box(
+                        modifier = Modifier.padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = stringResource(R.string.no_events),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                        )
+                    }
                 }
             }
         }
@@ -953,35 +1092,156 @@ fun WeekDayCard(
 }
 
 @Composable
-fun CompactEventItem(event: Event, onClick: () -> Unit) {
+fun EnhancedCompactEventItem(event: Event, onClick: () -> Unit, isLast: Boolean) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
+            .clickable(onClick = onClick)
+            .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(8.dp)
-                .background(
-                    MaterialTheme.colorScheme.primary,
-                    CircleShape
+        // Event details
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            // Event title with improved typography
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = event.summary,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = event.summary,
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.Medium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = "${formatTime(event.startDateTime)} - ${formatTime(event.endDateTime)}",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+
+                if (!event.courseType.isNullOrBlank()) {
+                    Surface(
+                        color = when (event.courseType) {
+                            "CM" -> MaterialTheme.colorScheme.primaryContainer
+                            "TDB" -> MaterialTheme.colorScheme.secondaryContainer
+                            "TD" -> MaterialTheme.colorScheme.tertiaryContainer
+                            else -> MaterialTheme.colorScheme.primaryContainer
+                        },
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = event.courseType,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = when (event.courseType) {
+                                "CM" -> MaterialTheme.colorScheme.onPrimaryContainer
+                                "TDB" -> MaterialTheme.colorScheme.onSecondaryContainer
+                                "TD" -> MaterialTheme.colorScheme.onTertiaryContainer
+                                else -> MaterialTheme.colorScheme.onPrimaryContainer
+                            },
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                }
+            }
+
+            // Time and duration information
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Start and end time
+                Row(
+                    modifier = Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = formatTime(event.startDateTime),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(12.dp)
+                    )
+                    Text(
+                        text = formatTime(event.endDateTime),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                // Duration
+                val startMinutes = event.startDateTime.hour * 60 + event.startDateTime.minute
+                val endMinutes = event.endDateTime.hour * 60 + event.endDateTime.minute
+                val durationMinutes = endMinutes - startMinutes
+                Surface(
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = formatDuration(durationMinutes),
+                        style = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+            }
+
+            // Location and instructor information with icons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Location
+                if (!event.location.isNullOrBlank()) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            Icons.Default.LocationOn,
+                            contentDescription = stringResource(R.string.location_desc),
+                            tint = MaterialTheme.colorScheme.secondary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = event.location,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+
+                // Instructor
+                if (!event.instructor.isNullOrBlank()) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            Icons.Default.Person,
+                            contentDescription = stringResource(R.string.instructor_desc),
+                            tint = MaterialTheme.colorScheme.tertiary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = event.instructor,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -1865,14 +2125,14 @@ fun DayCourseItem(
         shape = RoundedCornerShape(20.dp),
         onClick = onClick
     ) {
-        Column(
-            modifier = Modifier.padding(24.dp)
-        ) {
+        Column {
             // Header section with title and course type badge
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, top = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
@@ -1881,8 +2141,7 @@ fun DayCourseItem(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        lineHeight = MaterialTheme.typography.headlineSmall.lineHeight.times(1.1f)
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
@@ -1921,32 +2180,6 @@ fun DayCourseItem(
                     .fillMaxWidth()
                     .padding(top = 8.dp)
             ) {
-                if (!event.courseType.isNullOrBlank()) {
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Surface(
-                        color = when (event.courseType) {
-                            "CM" -> MaterialTheme.colorScheme.primary
-                            "TDB" -> MaterialTheme.colorScheme.secondary
-                            "TD" -> MaterialTheme.colorScheme.tertiary
-                            else -> MaterialTheme.colorScheme.primary
-                        },
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
-                        Text(
-                            text = event.courseType,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = when (event.courseType) {
-                                "CM" -> MaterialTheme.colorScheme.onPrimary
-                                "TDB" -> MaterialTheme.colorScheme.onSecondary
-                                "TD" -> MaterialTheme.colorScheme.onTertiary
-                                else -> MaterialTheme.colorScheme.onPrimary
-                            },
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                        )
-                    }
-                }
-
                 Row(
                     modifier = Modifier.padding(20.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly,
@@ -2369,7 +2602,9 @@ fun RestaurantMenuView(
 @Composable
 fun SettingsView(
     selectedTPGroup: TPGroup,
+    selectedMMIYear: MMIYear,
     onTPGroupChange: (TPGroup) -> Unit,
+    onMMIYearChange: (MMIYear) -> Unit,
     onDismiss: () -> Unit
 ) {
     LazyColumn(
@@ -2445,6 +2680,135 @@ fun SettingsView(
                     modifier = Modifier.padding(24.dp),
                     verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
+                    // MMI Year Selection Section
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f)
+                        ),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(20.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Surface(
+                                    color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f),
+                                    shape = CircleShape,
+                                    modifier = Modifier.size(40.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            Icons.Default.School,
+                                            contentDescription = "MMI Year",
+                                            tint = MaterialTheme.colorScheme.tertiary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
+                                Column {
+                                    Text(
+                                        text = stringResource(R.string.mmi_year_selection),
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.select_your_mmi_year),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onTertiaryContainer.copy(
+                                            alpha = 0.8f
+                                        )
+                                    )
+                                }
+                            }
+
+                            // MMI Year Selection
+                            SingleChoiceSegmentedButtonRow(
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                listOf(
+                                    MMIYear.MMI1,
+                                    MMIYear.MMI2,
+                                    MMIYear.MMI3
+                                ).forEachIndexed { index, mmiYear ->
+                                    SegmentedButton(
+                                        shape = SegmentedButtonDefaults.itemShape(
+                                            index = index,
+                                            count = 3
+                                        ),
+                                        onClick = { onMMIYearChange(mmiYear) },
+                                        selected = selectedMMIYear == mmiYear,
+                                        colors = SegmentedButtonDefaults.colors(
+                                            activeContainerColor = MaterialTheme.colorScheme.tertiary,
+                                            activeContentColor = MaterialTheme.colorScheme.onTertiary,
+                                            inactiveContainerColor = MaterialTheme.colorScheme.surface,
+                                            inactiveContentColor = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    ) {
+                                        Text(
+                                            text = when (mmiYear) {
+                                                MMIYear.MMI1 -> stringResource(R.string.mmi1_label)
+                                                MMIYear.MMI2 -> stringResource(R.string.mmi2_label)
+                                                MMIYear.MMI3 -> stringResource(R.string.mmi3_label)
+                                            },
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = if (selectedMMIYear == mmiYear) FontWeight.Bold else FontWeight.Medium
+                                        )
+                                    }
+                                }
+                            }
+
+                            // Current selection info
+                            Surface(
+                                color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.current_year),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.tertiary
+                                    )
+                                    when (selectedMMIYear) {
+                                        MMIYear.MMI1 -> {
+                                            Text(
+                                                text = stringResource(R.string.showing_mmi1_calendar),
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                        }
+
+                                        MMIYear.MMI2 -> {
+                                            Text(
+                                                text = stringResource(R.string.showing_mmi2_calendar),
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                        }
+
+                                        MMIYear.MMI3 -> {
+                                            Text(
+                                                text = stringResource(R.string.showing_mmi3_calendar),
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     // TP Group Filter Section
                     Card(
                         modifier = Modifier.fillMaxWidth(),

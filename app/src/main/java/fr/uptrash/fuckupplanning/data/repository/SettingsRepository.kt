@@ -15,9 +15,17 @@ enum class TPGroup {
     TP4
 }
 
+enum class MMIYear {
+    MMI1,
+    MMI2,
+    MMI3
+}
+
 interface SettingsRepository {
     val selectedTPGroupFlow: Flow<TPGroup>
+    val selectedMMIYearFlow: Flow<MMIYear>
     suspend fun saveSelectedTPGroup(tpGroup: TPGroup)
+    suspend fun saveSelectedMMIYear(mmiYear: MMIYear)
 }
 
 class SettingsRepositoryImpl(
@@ -26,6 +34,7 @@ class SettingsRepositoryImpl(
 
     private companion object {
         val KEY_SELECTED_TP = stringPreferencesKey("selected_tp_group")
+        val KEY_SELECTED_MMI_YEAR = stringPreferencesKey("selected_mmi_year")
     }
 
     override val selectedTPGroupFlow: Flow<TPGroup> = dataStore.data
@@ -38,10 +47,25 @@ class SettingsRepositoryImpl(
             }
         }
 
+    override val selectedMMIYearFlow: Flow<MMIYear> = dataStore.data
+        .map { prefs ->
+            val stored = prefs[KEY_SELECTED_MMI_YEAR] ?: MMIYear.MMI2.name
+            try {
+                MMIYear.valueOf(stored)
+            } catch (e: IllegalArgumentException) {
+                MMIYear.MMI2
+            }
+        }
+
     override suspend fun saveSelectedTPGroup(tpGroup: TPGroup) {
         dataStore.edit { prefs ->
             prefs[KEY_SELECTED_TP] = tpGroup.name
         }
     }
-}
 
+    override suspend fun saveSelectedMMIYear(mmiYear: MMIYear) {
+        dataStore.edit { prefs ->
+            prefs[KEY_SELECTED_MMI_YEAR] = mmiYear.name
+        }
+    }
+}

@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import fr.uptrash.fuckupplanning.data.model.Event
 import fr.uptrash.fuckupplanning.data.repository.CalendarRepository
+import fr.uptrash.fuckupplanning.data.repository.MMIYear
 import fr.uptrash.fuckupplanning.data.repository.RestaurantMenuRepository
 import fr.uptrash.fuckupplanning.data.repository.SettingsRepository
 import fr.uptrash.fuckupplanning.data.repository.TPGroup
@@ -45,6 +46,11 @@ class CalendarViewModel @Inject constructor(
         viewModelScope.launch {
             settingsRepository.selectedTPGroupFlow.collect { tpGroup ->
                 selectTPGroup(tpGroup)
+            }
+        }
+        viewModelScope.launch {
+            settingsRepository.selectedMMIYearFlow.collect { mmiYear ->
+                _uiState.value = _uiState.value.copy(selectedMMIYear = mmiYear)
             }
         }
     }
@@ -122,6 +128,15 @@ class CalendarViewModel @Inject constructor(
             settingsRepository.saveSelectedTPGroup(tpGroup)
         }
         applyTPFilter()
+    }
+
+    fun selectMMIYear(mmiYear: MMIYear) {
+        _uiState.value = _uiState.value.copy(selectedMMIYear = mmiYear)
+        viewModelScope.launch {
+            settingsRepository.saveSelectedMMIYear(mmiYear)
+            // Reload events with the new MMI year
+            loadEvents()
+        }
     }
 
     fun showSettings() {
@@ -230,6 +245,7 @@ data class CalendarUiState @OptIn(ExperimentalTime::class) constructor(
         .toLocalDateTime(TimeZone.currentSystemDefault()).date,
     val selectedEvent: Event? = null,
     val selectedTPGroup: TPGroup = TPGroup.ALL,
+    val selectedMMIYear: MMIYear = MMIYear.MMI2,
     val selectedDayForCourseList: LocalDate? = null,
     val showSettings: Boolean = false,
 

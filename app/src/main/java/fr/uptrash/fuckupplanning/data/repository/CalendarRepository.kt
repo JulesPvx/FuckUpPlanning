@@ -4,6 +4,7 @@ import fr.uptrash.fuckupplanning.data.model.Event
 import fr.uptrash.fuckupplanning.data.network.ApiService
 import fr.uptrash.fuckupplanning.util.ICalParser
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -11,15 +12,29 @@ import javax.inject.Singleton
 @Singleton
 class CalendarRepository @Inject constructor(
     private val apiService: ApiService,
-    private val parser: ICalParser
+    private val parser: ICalParser,
+    private val settingsRepository: SettingsRepository
 ) {
     suspend fun getEvents(): Result<List<Event>> = withContext(Dispatchers.IO) {
         try {
             // Fetch both S1 and S2 calendar data
-            val s1ICalData = apiService.getS1ICalData()
-            val s2ICalData = apiService.getS2ICalData()
+            // Get the selected MMI year from settings
+            val selectedMMIYear = settingsRepository.selectedMMIYearFlow.first()
 
             // Parse events from both calendars
+            // Fetch both S1 and S2 calendar data based on selected MMI year
+            val s1ICalData = when (selectedMMIYear) {
+                MMIYear.MMI1 -> apiService.getS1MMI1ICalData()
+                MMIYear.MMI2 -> apiService.getS1MMI2ICalData()
+                MMIYear.MMI3 -> apiService.getS1MMI3ICalData()
+            }
+
+            val s2ICalData = when (selectedMMIYear) {
+                MMIYear.MMI1 -> apiService.getS2MMI1ICalData()
+                MMIYear.MMI2 -> apiService.getS2MMI2ICalData()
+                MMIYear.MMI3 -> apiService.getS2MMI3ICalData()
+            }
+
             val s1Events = parser.parseICalData(s1ICalData)
             val s2Events = parser.parseICalData(s2ICalData)
 

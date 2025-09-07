@@ -235,8 +235,10 @@ class ICalParser @Inject constructor() {
                         notesList.add(lineWithoutCourseType)
                     }
                 }
-                // Check for instructor names (all caps format with space)
-                line.matches(Regex("^[A-Z]+ [A-Z]+$")) && !line.contains("BUT") -> {
+                // Check for instructor names (all caps format with space, may include hyphens)
+                line.matches(Regex("^\\p{Lu}+(?:-\\p{Lu}+)* \\p{Lu}+(?:-\\p{Lu}+)*$")) && !line.contains(
+                    "BUT"
+                ) -> {
                     instructor = line
                 }
                 // Check for update timestamp
