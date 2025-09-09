@@ -212,6 +212,7 @@ fun CalendarScreen(
                             selectedDate = uiState.selectedDate,
                             events = uiState.events,
                             onEventClick = { viewModel.selectEvent(it) },
+                            showFullDay = { viewModel.selectDayForCourseList(it) },
                             paddingValues = paddingValues
                         )
 
@@ -622,7 +623,8 @@ fun WeekView(
     selectedDate: LocalDate,
     events: List<Event>,
     onEventClick: (Event) -> Unit,
-    paddingValues: PaddingValues
+    paddingValues: PaddingValues,
+    showFullDay: (LocalDate) -> Unit = { _ -> }
 ) {
     val startOfWeek = selectedDate.minus(selectedDate.dayOfWeek.isoDayNumber - 1, DateTimeUnit.DAY)
     // Only show Monday to Friday (5 days instead of 7)
@@ -646,7 +648,8 @@ fun WeekView(
             WeekDayCard(
                 date = day,
                 events = weekEvents[day] ?: emptyList(),
-                onEventClick = onEventClick
+                onEventClick = onEventClick,
+                showFullDay = showFullDay
             )
         }
     }
@@ -892,7 +895,8 @@ fun EnhancedMonthDayCell(
 fun WeekDayCard(
     date: LocalDate,
     events: List<Event>,
-    onEventClick: (Event) -> Unit
+    onEventClick: (Event) -> Unit,
+    showFullDay: (LocalDate) -> Unit
 ) {
     // Calculate time information for better display
     val sortedEvents = events.sortedBy { it.startDateTime }
@@ -1058,7 +1062,10 @@ fun WeekDayCard(
                         Surface(
                             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                             shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = {
+                                showFullDay(date)
+                            }
                         ) {
                             Row(
                                 modifier = Modifier.padding(12.dp),
@@ -3133,3 +3140,4 @@ private fun formatDuration(totalMinutes: Int): String {
         else -> "${minutes}min"
     }
 }
+
