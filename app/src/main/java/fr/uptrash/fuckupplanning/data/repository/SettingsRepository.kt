@@ -4,6 +4,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import fr.uptrash.fuckupplanning.ui.theme.AppTheme
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -24,8 +25,10 @@ enum class MMIYear {
 interface SettingsRepository {
     val selectedTPGroupFlow: Flow<TPGroup>
     val selectedMMIYearFlow: Flow<MMIYear>
+    val selectedAppThemeFlow: Flow<AppTheme>
     suspend fun saveSelectedTPGroup(tpGroup: TPGroup)
     suspend fun saveSelectedMMIYear(mmiYear: MMIYear)
+    suspend fun saveSelectedAppTheme(appTheme: AppTheme)
 }
 
 class SettingsRepositoryImpl(
@@ -35,6 +38,7 @@ class SettingsRepositoryImpl(
     private companion object {
         val KEY_SELECTED_TP = stringPreferencesKey("selected_tp_group")
         val KEY_SELECTED_MMI_YEAR = stringPreferencesKey("selected_mmi_year")
+        val KEY_SELECTED_APP_THEME = stringPreferencesKey("selected_app_theme")
     }
 
     override val selectedTPGroupFlow: Flow<TPGroup> = dataStore.data
@@ -57,6 +61,16 @@ class SettingsRepositoryImpl(
             }
         }
 
+    override val selectedAppThemeFlow: Flow<AppTheme> = dataStore.data
+        .map { prefs ->
+            val stored = prefs[KEY_SELECTED_APP_THEME] ?: AppTheme.SYSTEM.key
+            try {
+                AppTheme.fromKey(stored)
+            } catch (e: IllegalArgumentException) {
+                AppTheme.SYSTEM
+            }
+        }
+
     override suspend fun saveSelectedTPGroup(tpGroup: TPGroup) {
         dataStore.edit { prefs ->
             prefs[KEY_SELECTED_TP] = tpGroup.name
@@ -66,6 +80,12 @@ class SettingsRepositoryImpl(
     override suspend fun saveSelectedMMIYear(mmiYear: MMIYear) {
         dataStore.edit { prefs ->
             prefs[KEY_SELECTED_MMI_YEAR] = mmiYear.name
+        }
+    }
+
+    override suspend fun saveSelectedAppTheme(appTheme: AppTheme) {
+        dataStore.edit { prefs ->
+            prefs[KEY_SELECTED_APP_THEME] = appTheme.key
         }
     }
 }

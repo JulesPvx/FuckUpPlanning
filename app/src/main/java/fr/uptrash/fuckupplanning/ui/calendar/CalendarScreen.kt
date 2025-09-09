@@ -1,11 +1,14 @@
 package fr.uptrash.fuckupplanning.ui.calendar
 
+import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -29,6 +32,7 @@ import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.CalendarViewDay
 import androidx.compose.material.icons.filled.CalendarViewMonth
 import androidx.compose.material.icons.filled.CalendarViewWeek
+import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Group
@@ -56,24 +60,33 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.uptrash.fuckupplanning.R
 import fr.uptrash.fuckupplanning.data.model.Event
 import fr.uptrash.fuckupplanning.data.repository.MMIYear
 import fr.uptrash.fuckupplanning.data.repository.RestaurantMenuRepository
 import fr.uptrash.fuckupplanning.data.repository.TPGroup
+import fr.uptrash.fuckupplanning.ui.theme.AppTheme
+import fr.uptrash.fuckupplanning.ui.theme.CustomAppTheme
+import fr.uptrash.fuckupplanning.ui.theme.ThemeViewModel
+import fr.uptrash.fuckupplanning.ui.theme.appThemes
+import fr.uptrash.fuckupplanning.ui.theme.blueLightScheme
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
@@ -90,9 +103,11 @@ import kotlin.time.ExperimentalTime
 @Composable
 fun CalendarScreen(
     modifier: Modifier = Modifier,
-    viewModel: CalendarViewModel = hiltViewModel()
+    viewModel: CalendarViewModel = hiltViewModel(),
+    themeViewMode: ThemeViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val themeState by themeViewMode.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
         modifier = modifier,
@@ -258,10 +273,12 @@ fun CalendarScreen(
                 sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
             ) {
                 SettingsView(
+                    selectedTheme = themeState.currentTheme,
                     selectedTPGroup = uiState.selectedTPGroup,
                     selectedMMIYear = uiState.selectedMMIYear,
                     onTPGroupChange = { viewModel.selectTPGroup(it) },
                     onMMIYearChange = { viewModel.selectMMIYear(it) },
+                    onThemeChange = { themeViewMode.updateTheme(it) },
                     onDismiss = { viewModel.dismissSettings() }
                 )
             }
@@ -2601,12 +2618,16 @@ fun RestaurantMenuView(
 // Settings View
 @Composable
 fun SettingsView(
+    selectedTheme: AppTheme,
     selectedTPGroup: TPGroup,
     selectedMMIYear: MMIYear,
     onTPGroupChange: (TPGroup) -> Unit,
     onMMIYearChange: (MMIYear) -> Unit,
+    onThemeChange: (AppTheme) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val context = LocalContext.current
+
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
@@ -2697,7 +2718,7 @@ fun SettingsView(
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 Surface(
-                                    color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f),
+                                    color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.2f),
                                     shape = CircleShape,
                                     modifier = Modifier.size(40.dp)
                                 ) {
@@ -2705,7 +2726,7 @@ fun SettingsView(
                                         Icon(
                                             Icons.Default.School,
                                             contentDescription = "MMI Year",
-                                            tint = MaterialTheme.colorScheme.tertiary,
+                                            tint = MaterialTheme.colorScheme.tertiaryContainer,
                                             modifier = Modifier.size(20.dp)
                                         )
                                     }
@@ -2715,12 +2736,12 @@ fun SettingsView(
                                         text = stringResource(R.string.mmi_year_selection),
                                         style = MaterialTheme.typography.titleLarge,
                                         fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                                        color = MaterialTheme.colorScheme.tertiaryContainer
                                     )
                                     Text(
                                         text = stringResource(R.string.select_your_mmi_year),
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onTertiaryContainer.copy(
+                                        color = MaterialTheme.colorScheme.tertiaryContainer.copy(
                                             alpha = 0.8f
                                         )
                                     )
@@ -2953,6 +2974,92 @@ fun SettingsView(
                                             )
                                         }
                                     }
+                                }
+                            }
+                        }
+                    }
+
+                    // Theme Selection Section
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f)
+                        ),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(20.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Surface(
+                                    color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f),
+                                    shape = CircleShape,
+                                    modifier = Modifier.size(40.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            Icons.Default.ColorLens,
+                                            contentDescription = "Theme",
+                                            tint = MaterialTheme.colorScheme.secondary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
+                                Column {
+                                    Text(
+                                        text = stringResource(R.string.theme_selection),
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.choose_your_preferred_theme),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(
+                                            alpha = 0.8f
+                                        )
+                                    )
+                                }
+                            }
+
+                            // Theme Selection
+                            FlowRow(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+
+                                ) {
+                                appThemes.forEach { appTheme ->
+                                    val isSelected = selectedTheme == appTheme
+                                    Box(
+                                        modifier = Modifier
+                                            .size(72.dp)
+                                            .clip(CircleShape)
+                                            .border(
+                                                width = if (isSelected) 3.dp else 1.dp,
+                                                color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface.copy(
+                                                    alpha = 0.2f
+                                                ),
+                                                shape = CircleShape
+                                            )
+                                            .background(
+                                                if (isSelected) MaterialTheme.colorScheme.primary else if (appTheme is CustomAppTheme) appTheme.light.primary else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                                    val dynamicColor = isSystemInDarkTheme()
+                                                    if (dynamicColor) dynamicDarkColorScheme(context).primary else dynamicLightColorScheme(
+                                                        context
+                                                    ).primary
+                                                } else {
+                                                    blueLightScheme.primary
+                                                }
+                                            )
+                                            .clickable {
+                                                onThemeChange(appTheme)
+                                            }
+                                    )
                                 }
                             }
                         }
