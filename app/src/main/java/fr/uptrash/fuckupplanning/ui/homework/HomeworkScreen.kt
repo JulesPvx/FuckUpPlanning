@@ -19,12 +19,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,12 +35,16 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.uptrash.fuckupplanning.data.model.Homework
 import fr.uptrash.fuckupplanning.ui.auth.AuthViewModel
+import fr.uptrash.fuckupplanning.ui.theme.InvalidColor
+import fr.uptrash.fuckupplanning.ui.theme.ValidColor
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -149,14 +156,19 @@ private fun EmptyState(modifier: Modifier = Modifier) {
 
 @Composable
 private fun HomeworkCard(
+    modifier: Modifier = Modifier,
     homework: Homework,
     onToggleComplete: () -> Unit,
     onDelete: () -> Unit,
     isOwner: Boolean,
-    modifier: Modifier = Modifier
+    viewModel: HomeworkViewModel = hiltViewModel()
 ) {
+    val (hasUpvoted, hasDownvoted) = viewModel.getUserVoteStatus(homework.id)
+
     Card(
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier
+            .fillMaxWidth()
+            .alpha(if (homework.karma <= -3) 0.5f else 1f)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -167,7 +179,7 @@ private fun HomeworkCard(
                 verticalAlignment = Alignment.Top
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    // Due date
+                    // Due date and course info
                     FlowRow(
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -208,6 +220,28 @@ private fun HomeworkCard(
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                             )
                         }
+
+                        if (isOwner) {
+                            Box(
+                                modifier = Modifier
+                                    .background(
+                                        color = MaterialTheme.colorScheme.tertiary.copy(0.1f),
+                                        shape = CircleShape
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "Karma: ${homework.karma}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = when {
+                                        homework.karma > 0 -> ValidColor
+                                        homework.karma < 0 -> InvalidColor
+                                        else -> MaterialTheme.colorScheme.tertiary
+                                    },
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
+                        }
                     }
 
                     // Description
@@ -219,16 +253,58 @@ private fun HomeworkCard(
                         )
                     }
 
+                    // Delete button for owner
                     if (isOwner) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(top = 8.dp)
+                        Button(
+                            modifier = Modifier
+                                .padding(top = 8.dp)
+                                .align(Alignment.End),
+                            onClick = onDelete
                         ) {
-                            Button(
-                                onClick = onDelete
-                            ) {
-                                Text("Delete")
-                            }
+                            Text("Delete")
+                        }
+                    }
+                }
+
+                // Karma voting section
+                if (!isOwner) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier.background(
+                            MaterialTheme.colorScheme.outline.copy(0.1f),
+                            shape = CircleShape
+                        )
+                    ) {
+                        IconButton(
+                            onClick = { viewModel.voteOnHomework(homework, true) },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.KeyboardArrowUp,
+                                contentDescription = "Upvote",
+                                tint = if (hasUpvoted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+
+                        Text(
+                            text = homework.karma.toString(),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = if (hasUpvoted || hasDownvoted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                        )
+
+                        IconButton(
+                            onClick = { viewModel.voteOnHomework(homework, false) },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.KeyboardArrowDown,
+                                contentDescription = "Downvote",
+                                tint = if (hasDownvoted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                                modifier = Modifier.size(20.dp)
+                            )
                         }
                     }
                 }

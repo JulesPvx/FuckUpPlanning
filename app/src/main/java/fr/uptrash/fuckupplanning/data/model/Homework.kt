@@ -11,5 +11,15 @@ data class Homework(
     val tp: TPGroup = TPGroup.ALL,
     val year: MMIYear = MMIYear.MMI1,
     val createdAt: Long = System.currentTimeMillis(),
-    val ownerId: String = "Unknown"
-)
+    val ownerId: String = "Unknown",
+    val karma: Int = 0,
+    val upvotes: Map<String, Boolean> = emptyMap(), // userId -> true for upvote
+    val downvotes: Map<String, Boolean> = emptyMap() // userId -> true for downvote
+) {
+    fun netVotes(): Int = (upvotes.size - downvotes.size)
+
+    fun isUpvotedBy(userId: String?): Boolean = upvotes.containsKey(userId)
+    fun isDownvotedBy(userId: String?): Boolean = downvotes.containsKey(userId)
+
+    fun canEdit(userId: String?): Boolean = userId == ownerId
+}

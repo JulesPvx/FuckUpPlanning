@@ -115,6 +115,35 @@ class HomeworkViewModel @Inject constructor(
         }
     }
 
+    fun voteOnHomework(homework: Homework, isUpvote: Boolean) {
+        viewModelScope.launch {
+            val userId = authRepository.currentUser?.uid ?: return@launch
+
+            // Don't allow voting on own homework
+            if (homework.ownerId == userId) {
+                _uiState.value = _uiState.value.copy(error = "You cannot vote on your own homework")
+                return@launch
+            }
+
+            homeworkRepository.voteOnHomework(homework.id, userId, isUpvote)
+                .onFailure { error ->
+                    _uiState.value = _uiState.value.copy(error = error.message)
+                }
+        }
+    }
+
+    fun getUserVoteStatus(homeworkId: String): Pair<Boolean, Boolean> {
+        val userId = authRepository.currentUser?.uid ?: return Pair(false, false)
+        val homework = _allHomework.value.find { it.id == homeworkId }
+        return if (homework != null) {
+            val hasUpvoted = homework.upvotes[userId] == true
+            val hasDownvoted = homework.downvotes[userId] == true
+            Pair(hasUpvoted, hasDownvoted)
+        } else {
+            Pair(false, false)
+        }
+    }
+
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
     }

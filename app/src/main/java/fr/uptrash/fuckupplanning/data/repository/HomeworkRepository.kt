@@ -13,7 +13,9 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class HomeworkRepository @Inject constructor() {
+class HomeworkRepository @Inject constructor(
+    private val userRepository: UserRepository
+) {
     private val database = FirebaseDatabase.getInstance()
     private val homeworkRef = database.getReference("homework")
 
@@ -74,4 +76,102 @@ class HomeworkRepository @Inject constructor() {
             Result.failure(e)
         }
     }
+
+    suspend fun voteOnHomework(
+        homeworkId: String,
+        userId: String,
+        isUpvote: Boolean
+    ): Result<Unit> {
+        return try {
+            val snapshot = homeworkRef.child(homeworkId).get().await()
+            val homework = snapshot.getValue(Homework::class.java)?.copy(id = homeworkId)
+                ?: return Result.failure(Exception("Homework not found"))
+
+            val currentUpvotes = homework.upvotes.toMutableMap()
+            val currentDownvotes = homework.downvotes.toMutableMap()
+
+            // Check current vote status
+            val hasUpvoted = currentUpvotes[userId] == true
+            val hasDownvoted = currentDownvotes[userId] == true
+
+            var karmaChange = 0
+            var ownerKarmaChange = 0
+
+            if (isUpvote) {
+                if (hasUpvoted) {
+                    // Remove upvote
+                    currentUpvotes.remove(userId)
+                    karmaChange = -1
+                    ownerKarmaChange = -1
+                } else {
+                    // Add upvote (remove downvote if exists)
+                    if (hasDownvoted) {
+                        currentDownvotes.remove(userId)
+                        karmaChange = 2 // Remove -1 and add +1
+                        ownerKarmaChange = 2
+                    } else {
+                        karmaChange = 1
+                        ownerKarmaChange = 1
+                    }
+                    currentUpvotes[userId] = true
+                }
+            } else {
+                if (hasDownvoted) {
+                    // Remove downvote
+                    currentDownvotes.remove(userId)
+                    karmaChange = 1
+                    ownerKarmaChange = 1
+                } else {
+                    // Add downvote (remove upvote if exists)
+                    if (hasUpvoted) {
+                        currentUpvotes.remove(userId)
+                        karmaChange = -2 // Remove +1 and add -1
+                        ownerKarmaChange = -2
+                    } else {
+                        karmaChange = -1
+                        ownerKarmaChange = -1
+                    }
+                    currentDownvotes[userId] = true
+                }
+            }
+
+            val newKarma = homework.karma + karmaChange
+            val updatedHomework = homework.copy(
+                karma = newKarma,
+                upvotes = currentUpvotes,
+                downvotes = currentDownvotes
+            )
+
+            // Update homework
+            homeworkRef.child(homeworkId).setValue(updatedHomework).await()
+
+            // Update owner's karma
+            if (ownerKarmaChange != 0 && homework.ownerId != "Unknown") {
+                userRepository.updateUserKarma(homework.ownerId, ownerKarmaChange)
+            }
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    fun getUserVoteStatus(homeworkId: String, userId: String): Flow<Pair<Boolean, Boolean>> =
+        callbackFlow {
+            val listener = object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val homework = snapshot.getValue(Homework::class.java)
+                    val hasUpvoted = homework?.upvotes?.get(userId) == true
+                    val hasDownvoted = homework?.downvotes?.get(userId) == true
+                    trySend(Pair(hasUpvoted, hasDownvoted))
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    close(error.toException())
+                }
+            }
+
+            homeworkRef.child(homeworkId).addValueEventListener(listener)
+            awaitClose { homeworkRef.child(homeworkId).removeEventListener(listener) }
+        }
 }
