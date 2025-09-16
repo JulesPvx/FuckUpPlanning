@@ -223,46 +223,6 @@ fun CalendarScreen(
             )
         }
     }
-
-    // Settings Modal
-    if (uiState.showSettings) {
-        ModalBottomSheet(
-            onDismissRequest = { calendarViewModel.dismissSettings() },
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            contentWindowInsets = { WindowInsets(0.dp, 0.dp, 0.dp, 0.dp) },
-            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
-        ) {
-            SettingsView(
-                selectedThemeMode = themeState.themeMode,
-                selectedTheme = themeState.currentTheme,
-                selectedTPGroup = uiState.selectedTPGroup,
-                selectedMMIYear = uiState.selectedMMIYear,
-                onTPGroupChange = { calendarViewModel.selectTPGroup(it) },
-                onMMIYearChange = { calendarViewModel.selectMMIYear(it) },
-                onThemeChange = { themeViewModel.updateTheme(it) },
-                onThemeModeChange = { themeViewModel.updateThemeMode(it) },
-                onDismiss = { calendarViewModel.dismissSettings() }
-            )
-        }
-    }
-
-    // Restaurant Menu Modal
-    if (uiState.showMenu) {
-        ModalBottomSheet(
-            onDismissRequest = { calendarViewModel.dismissMenu() },
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            contentWindowInsets = { WindowInsets(0.dp, 0.dp, 0.dp, 0.dp) },
-            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
-        ) {
-            RestaurantMenuView(
-                menu = uiState.restaurantMenu,
-                isLoading = uiState.isMenuLoading,
-                error = uiState.menuError,
-                onDismiss = { calendarViewModel.dismissMenu() },
-                onRefresh = { calendarViewModel.showMenu(forceRefresh = true) }
-            )
-        }
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
