@@ -166,7 +166,8 @@ class MainActivity : ComponentActivity() {
                                 route = Destination.HOMEWORK.route
                             ) {
                                 HomeworkScreen(
-                                    modifier = Modifier.fillMaxSize()
+                                    modifier = Modifier.fillMaxSize(),
+                                    paddingValues = paddingValues
                                 )
                             }
                         }

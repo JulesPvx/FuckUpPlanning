@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -304,13 +305,32 @@ fun CalendarHeader(
                     )
                 }
 
-                Text(
-                    text = formatDateRange(selectedDate, viewMode),
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Medium,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.weight(1f)
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(IntrinsicSize.Min)
+                ) {
+                    Text(
+                        text = formatDateRange(selectedDate, viewMode),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center,
+                    )
+
+                    // Subtext for day view
+                    if (viewMode == CalendarViewMode.DAY) {
+                        Text(
+                            text = getDayOfWeekDisplayName(selectedDate.dayOfWeek, full = true),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Normal,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
 
                 IconButton(onClick = onNextClick) {
                     Icon(
@@ -2450,7 +2470,12 @@ fun RestaurantMenuView(
                 color = MaterialTheme.colorScheme.surface
             ) {
                 if (isLoading) {
-                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(48.dp),
                             color = MaterialTheme.colorScheme.primary
@@ -2474,7 +2499,9 @@ fun RestaurantMenuView(
                     ) {
                         if (menu.isEmpty()) {
                             Box(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(24.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
@@ -3057,9 +3084,8 @@ private fun formatDateRange(date: LocalDate, viewMode: CalendarViewMode): String
         }
 
         CalendarViewMode.MONTH -> {
-            val month = date.month.number.toString().padStart(2, '0')
-            val year = date.year
-            "$month/$year"
+            // "Month Year" format
+            "${date.month.name.lowercase().replaceFirstChar { it.titlecase() }} ${date.year}"
         }
     }
 }

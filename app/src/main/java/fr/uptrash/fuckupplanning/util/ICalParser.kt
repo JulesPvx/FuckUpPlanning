@@ -296,10 +296,13 @@ class ICalParser @Inject constructor() {
     }
 
     private fun formatEventTitle(title: String): String {
+        // Remove leading underscore if present
+        val cleanTitle = if (title.startsWith("_")) title.removePrefix("_") else title
+
         // Only format titles that start with R followed by digits, dot, digits (like R3.12-dev front-info)
-        if (title.matches(Regex("^R\\d+\\.\\d+.*"))) {
+        if (cleanTitle.matches(Regex("^R\\d+\\.\\d+.*"))) {
             // Split on hyphen to separate room/code from subject
-            val parts = title.split("-", limit = 2)
+            val parts = cleanTitle.split("-", limit = 2)
             if (parts.size == 2) {
                 val roomCode = parts[0].trim() // e.g., "R3.12"
                 val subject = parts[1].trim() // e.g., "dev front-info"
@@ -315,7 +318,7 @@ class ICalParser @Inject constructor() {
         }
 
         // Return original title if it doesn't match the pattern or doesn't contain a hyphen
-        return title
+        return cleanTitle
     }
 
     private fun formatLocation(location: String?): String? {
