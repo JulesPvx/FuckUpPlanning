@@ -36,10 +36,8 @@ import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Group
-import androidx.compose.material.icons.filled.LocalDining
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
@@ -52,14 +50,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -75,7 +70,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.uptrash.fuckupplanning.R
 import fr.uptrash.fuckupplanning.data.model.Event
@@ -104,206 +99,168 @@ import kotlin.time.ExperimentalTime
 @Composable
 fun CalendarScreen(
     modifier: Modifier = Modifier,
-    viewModel: CalendarViewModel = hiltViewModel(),
-    themeViewMode: ThemeViewModel = hiltViewModel()
+    paddingValues: PaddingValues,
+    calendarViewModel: CalendarViewModel = hiltViewModel(),
+    themeViewModel: ThemeViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val themeState by themeViewMode.uiState.collectAsStateWithLifecycle()
+    val uiState by calendarViewModel.uiState.collectAsStateWithLifecycle()
+    val themeState by themeViewModel.uiState.collectAsStateWithLifecycle()
 
-    Scaffold(
-        modifier = modifier,
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.app_name), fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    actionIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                ),
-                actions = {
-                    // Menu button for restaurant
-                    IconButton(onClick = { viewModel.showMenu() }) {
-                        Icon(
-                            Icons.Default.LocalDining,
-                            contentDescription = stringResource(R.string.restaurant_menu)
-                        )
-                    }
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(top = paddingValues.calculateTopPadding())
+    ) {
+        CalendarHeader(
+            viewMode = uiState.viewMode,
+            selectedDate = uiState.selectedDate,
+            onViewModeChange = { calendarViewModel.switchViewMode(it) },
+            onPreviousClick = { calendarViewModel.navigatePrevious() },
+            onNextClick = { calendarViewModel.navigateNext() }
+        )
 
-                    IconButton(onClick = { viewModel.showSettings() }) {
-                        Icon(
-                            Icons.Default.Settings,
-                            contentDescription = stringResource(R.string.settings)
-                        )
-                    }
-                    IconButton(onClick = {
-                        viewModel.loadEvents()
-                    }) {
-                        Icon(
-                            Icons.Default.Refresh,
-                            contentDescription = stringResource(R.string.refresh)
-                        )
-                    }
+        when {
+            uiState.isLoading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(48.dp),
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
-            )
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = paddingValues.calculateTopPadding())
-        ) {
-            CalendarHeader(
-                viewMode = uiState.viewMode,
-                selectedDate = uiState.selectedDate,
-                onViewModeChange = { viewModel.switchViewMode(it) },
-                onPreviousClick = { viewModel.navigatePrevious() },
-                onNextClick = { viewModel.navigateNext() }
-            )
+            }
 
-            when {
-                uiState.isLoading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(48.dp),
-                            color = MaterialTheme.colorScheme.primary
+            uiState.error != null -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = stringResource(R.string.error_format, uiState.error ?: ""),
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyLarge
                         )
-                    }
-                }
-
-                uiState.error != null -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = stringResource(R.string.error_format, uiState.error ?: ""),
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodyLarge
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = {
+                                calendarViewModel.loadEvents()
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.error
                             )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Button(
-                                onClick = {
-                                    viewModel.loadEvents()
-                                },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.error
-                                )
-                            ) {
-                                Text(stringResource(R.string.retry))
-                            }
+                        ) {
+                            Text(stringResource(R.string.retry))
                         }
                     }
                 }
+            }
 
-                else -> {
-                    when (uiState.viewMode) {
-                        CalendarViewMode.DAY -> DayView(
-                            selectedDate = uiState.selectedDate,
-                            events = uiState.events,
-                            onEventClick = { viewModel.selectEvent(it) },
-                            paddingValues = paddingValues
-                        )
+            else -> {
+                when (uiState.viewMode) {
+                    CalendarViewMode.DAY -> DayView(
+                        selectedDate = uiState.selectedDate,
+                        events = uiState.events,
+                        onEventClick = { calendarViewModel.selectEvent(it) },
+                        paddingValues = paddingValues
+                    )
 
-                        CalendarViewMode.WEEK -> WeekView(
-                            selectedDate = uiState.selectedDate,
-                            events = uiState.events,
-                            onEventClick = { viewModel.selectEvent(it) },
-                            showFullDay = { viewModel.selectDayForCourseList(it) },
-                            paddingValues = paddingValues
-                        )
+                    CalendarViewMode.WEEK -> WeekView(
+                        selectedDate = uiState.selectedDate,
+                        events = uiState.events,
+                        onEventClick = { calendarViewModel.selectEvent(it) },
+                        showFullDay = { calendarViewModel.selectDayForCourseList(it) },
+                        paddingValues = paddingValues
+                    )
 
-                        CalendarViewMode.MONTH -> MonthView(
-                            selectedDate = uiState.selectedDate,
-                            events = uiState.events,
-                            onDateClick = { viewModel.selectDayForCourseList(it) },
-                            onEventClick = { viewModel.selectEvent(it) },
-                            paddingValues = paddingValues
-                        )
-                    }
+                    CalendarViewMode.MONTH -> MonthView(
+                        selectedDate = uiState.selectedDate,
+                        events = uiState.events,
+                        onDateClick = { calendarViewModel.selectDayForCourseList(it) },
+                        onEventClick = { calendarViewModel.selectEvent(it) },
+                        paddingValues = paddingValues
+                    )
                 }
             }
         }
+    }
 
-        // Event Detail Modal
-        uiState.selectedEvent?.let { event ->
-            ModalBottomSheet(
-                onDismissRequest = { viewModel.dismissEventDetail() },
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentWindowInsets = { WindowInsets(0.dp, 0.dp, 0.dp, 0.dp) },
-                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
-            ) {
-                EventDetailView(
-                    event = event,
-                    onDismiss = { viewModel.dismissEventDetail() }
-                )
-            }
+    // Event Detail Modal
+    uiState.selectedEvent?.let { event ->
+        ModalBottomSheet(
+            onDismissRequest = { calendarViewModel.dismissEventDetail() },
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentWindowInsets = { WindowInsets(0.dp, 0.dp, 0.dp, 0.dp) },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+        ) {
+            EventDetailView(
+                event = event,
+                onDismiss = { calendarViewModel.dismissEventDetail() }
+            )
         }
+    }
 
-        // Day Course List Modal
-        uiState.selectedDayForCourseList?.let { selectedDate ->
-            val dayEvents = uiState.events.filter { it.startDateTime.date == selectedDate }
-                .sortedBy { it.startDateTime }
-            ModalBottomSheet(
-                onDismissRequest = { viewModel.dismissDayCourseList() },
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentWindowInsets = { WindowInsets(0.dp, 0.dp, 0.dp, 0.dp) },
-                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
-            ) {
-                DayCourseListView(
-                    date = selectedDate,
-                    events = dayEvents,
-                    onEventClick = { event ->
-                        viewModel.dismissDayCourseList()
-                        viewModel.selectEvent(event)
-                    },
-                    onDismiss = { viewModel.dismissDayCourseList() }
-                )
-            }
+    // Day Course List Modal
+    uiState.selectedDayForCourseList?.let { selectedDate ->
+        val dayEvents = uiState.events.filter { it.startDateTime.date == selectedDate }
+            .sortedBy { it.startDateTime }
+        ModalBottomSheet(
+            onDismissRequest = { calendarViewModel.dismissDayCourseList() },
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentWindowInsets = { WindowInsets(0.dp, 0.dp, 0.dp, 0.dp) },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+        ) {
+            DayCourseListView(
+                date = selectedDate,
+                events = dayEvents,
+                onEventClick = { event ->
+                    calendarViewModel.dismissDayCourseList()
+                    calendarViewModel.selectEvent(event)
+                },
+                onDismiss = { calendarViewModel.dismissDayCourseList() }
+            )
         }
+    }
 
-        // Settings Modal
-        if (uiState.showSettings) {
-            ModalBottomSheet(
-                onDismissRequest = { viewModel.dismissSettings() },
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentWindowInsets = { WindowInsets(0.dp, 0.dp, 0.dp, 0.dp) },
-                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
-            ) {
-                SettingsView(
-                    selectedThemeMode = themeState.themeMode,
-                    selectedTheme = themeState.currentTheme,
-                    selectedTPGroup = uiState.selectedTPGroup,
-                    selectedMMIYear = uiState.selectedMMIYear,
-                    onTPGroupChange = { viewModel.selectTPGroup(it) },
-                    onMMIYearChange = { viewModel.selectMMIYear(it) },
-                    onThemeChange = { themeViewMode.updateTheme(it) },
-                    onThemeModeChange = { themeViewMode.updateThemeMode(it) },
-                    onDismiss = { viewModel.dismissSettings() }
-                )
-            }
+    // Settings Modal
+    if (uiState.showSettings) {
+        ModalBottomSheet(
+            onDismissRequest = { calendarViewModel.dismissSettings() },
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentWindowInsets = { WindowInsets(0.dp, 0.dp, 0.dp, 0.dp) },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+        ) {
+            SettingsView(
+                selectedThemeMode = themeState.themeMode,
+                selectedTheme = themeState.currentTheme,
+                selectedTPGroup = uiState.selectedTPGroup,
+                selectedMMIYear = uiState.selectedMMIYear,
+                onTPGroupChange = { calendarViewModel.selectTPGroup(it) },
+                onMMIYearChange = { calendarViewModel.selectMMIYear(it) },
+                onThemeChange = { themeViewModel.updateTheme(it) },
+                onThemeModeChange = { themeViewModel.updateThemeMode(it) },
+                onDismiss = { calendarViewModel.dismissSettings() }
+            )
         }
+    }
 
-        // Restaurant Menu Modal
-        if (uiState.showMenu) {
-            ModalBottomSheet(
-                onDismissRequest = { viewModel.dismissMenu() },
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentWindowInsets = { WindowInsets(0.dp, 0.dp, 0.dp, 0.dp) },
-                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
-            ) {
-                RestaurantMenuView(
-                    menu = uiState.restaurantMenu,
-                    isLoading = uiState.isMenuLoading,
-                    error = uiState.menuError,
-                    onDismiss = { viewModel.dismissMenu() },
-                    onRefresh = { viewModel.showMenu(forceRefresh = true) }
-                )
-            }
+    // Restaurant Menu Modal
+    if (uiState.showMenu) {
+        ModalBottomSheet(
+            onDismissRequest = { calendarViewModel.dismissMenu() },
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentWindowInsets = { WindowInsets(0.dp, 0.dp, 0.dp, 0.dp) },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+        ) {
+            RestaurantMenuView(
+                menu = uiState.restaurantMenu,
+                isLoading = uiState.isMenuLoading,
+                error = uiState.menuError,
+                onDismiss = { calendarViewModel.dismissMenu() },
+                onRefresh = { calendarViewModel.showMenu(forceRefresh = true) }
+            )
         }
     }
 }

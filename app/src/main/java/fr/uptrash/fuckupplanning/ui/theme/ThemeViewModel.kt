@@ -64,7 +64,8 @@ class ThemeViewModel @Inject constructor(
             settingsRepository.selectedAppThemeFlow.collect { appTheme ->
                 _uiState.value = _uiState.value.copy(currentTheme = appTheme)
             }
-
+        }
+        viewModelScope.launch {
             settingsRepository.selectedAppThemeModeFlow.collect { themeMode ->
                 _uiState.value = _uiState.value.copy(themeMode = themeMode)
             }

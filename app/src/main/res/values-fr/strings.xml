@@ -13,6 +13,10 @@
     <string name="no_events_for_day">Aucun événement pour ce jour</string>
     <string name="error_format">Erreur : %1$s</string>
 
+    <!-- Navigation -->
+    <string name="nav_calendar">Planning</string>
+    <string name="nav_homework">Travail</string>
+
     <!-- Theme -->
     <string name="theme_selection">Sélection du thème</string>
     <string name="choose_your_preferred_theme">Choisissez votre thème préféré</string>
