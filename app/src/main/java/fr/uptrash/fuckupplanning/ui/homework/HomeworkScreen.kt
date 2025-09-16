@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -162,24 +163,46 @@ private fun HomeworkCard(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     // Due date
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                color = if (isOverdue(homework.dueDate)) {
-                                    Color.Red.copy(alpha = 0.1f)
-                                } else {
-                                    MaterialTheme.colorScheme.outline.copy(0.2f)
-                                },
-                                shape = CircleShape
-                            ),
-                        contentAlignment = Alignment.Center
+                    FlowRow(
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        itemVerticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "Due: ${formatDate(homework.dueDate)}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = if (isOverdue(homework.dueDate)) Color.Red else MaterialTheme.colorScheme.outline,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
+                        Box(
+                            modifier = Modifier
+                                .background(
+                                    color = if (isOverdue(homework.dueDate)) {
+                                        Color.Red.copy(alpha = 0.1f)
+                                    } else {
+                                        MaterialTheme.colorScheme.outline.copy(0.2f)
+                                    },
+                                    shape = CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Due: ${formatDate(homework.dueDate)}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (isOverdue(homework.dueDate)) Color.Red else MaterialTheme.colorScheme.outline,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .background(
+                                    color = MaterialTheme.colorScheme.secondary.copy(0.1f),
+                                    shape = CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "${homework.year.name} - ${homework.tp.name}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
                     }
 
                     // Description
