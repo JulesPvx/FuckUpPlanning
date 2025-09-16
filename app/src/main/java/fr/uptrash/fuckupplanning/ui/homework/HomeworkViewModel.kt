@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import fr.uptrash.fuckupplanning.data.model.Homework
+import fr.uptrash.fuckupplanning.data.repository.AuthRepository
 import fr.uptrash.fuckupplanning.data.repository.HomeworkRepository
 import fr.uptrash.fuckupplanning.data.repository.MMIYear
 import fr.uptrash.fuckupplanning.data.repository.SettingsRepository
@@ -21,6 +22,7 @@ import kotlin.time.ExperimentalTime
 class HomeworkViewModel @Inject constructor(
     private val homeworkRepository: HomeworkRepository,
     private val settingsRepository: SettingsRepository,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(HomeworkUiState())
     val uiState: StateFlow<HomeworkUiState> = _uiState.asStateFlow()
@@ -83,7 +85,8 @@ class HomeworkViewModel @Inject constructor(
                 description = description,
                 dueDate = dueDate,
                 year = _uiState.value.selectedMMIYear,
-                tp = _uiState.value.selectedTPGroup
+                tp = _uiState.value.selectedTPGroup,
+                ownerId = authRepository.currentUser?.uid ?: "Anonymous"
             )
 
             homeworkRepository.addHomework(homework)

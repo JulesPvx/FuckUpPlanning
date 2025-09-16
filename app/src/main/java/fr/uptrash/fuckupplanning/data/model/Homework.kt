@@ -11,4 +11,5 @@ data class Homework(
     val tp: TPGroup = TPGroup.ALL,
     val year: MMIYear = MMIYear.MMI1,
     val createdAt: Long = System.currentTimeMillis(),
+    val ownerId: String = "Unknown"
 )

@@ -41,6 +41,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
+import fr.uptrash.fuckupplanning.ui.auth.AuthViewModel
 import fr.uptrash.fuckupplanning.ui.calendar.CalendarScreen
 import fr.uptrash.fuckupplanning.ui.calendar.CalendarViewModel
 import fr.uptrash.fuckupplanning.ui.calendar.RestaurantMenuView
@@ -60,9 +61,29 @@ class MainActivity : ComponentActivity() {
         setContent {
             val calendarViewModel: CalendarViewModel = hiltViewModel()
             val themeViewModel: ThemeViewModel = hiltViewModel()
+            val authViewModel: AuthViewModel = hiltViewModel()
 
             val themeUiState by themeViewModel.uiState.collectAsStateWithLifecycle()
             val calendarUiState by calendarViewModel.uiState.collectAsStateWithLifecycle()
+            val authUiState by authViewModel.uiState.collectAsStateWithLifecycle()
+
+            // Initialize anonymous authentication if user is not already authenticated
+            LaunchedEffect(Unit) {
+                if (!authUiState.isAuthenticated) {
+                    Log.d("MainActivity", "User not authenticated, signing in anonymously...")
+                    authViewModel.signInAnonymously()
+                }
+            }
+
+            // Log authentication state changes
+            LaunchedEffect(authUiState.isAuthenticated) {
+                if (authUiState.isAuthenticated) {
+                    Log.d("MainActivity", "User authenticated: ${authUiState.user?.uid}")
+                    Log.d("MainActivity", "Is anonymous: ${authUiState.user?.isAnonymous}")
+                } else {
+                    Log.d("MainActivity", "User not authenticated")
+                }
+            }
 
             val navController = rememberNavController()
             val startDestination = Destination.CALENDAR

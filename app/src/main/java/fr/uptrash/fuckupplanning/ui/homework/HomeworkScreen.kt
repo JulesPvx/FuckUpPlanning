@@ -29,14 +29,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.uptrash.fuckupplanning.data.model.Homework
+import fr.uptrash.fuckupplanning.ui.auth.AuthViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -46,9 +47,11 @@ import java.util.Locale
 fun HomeworkScreen(
     modifier: Modifier = Modifier,
     paddingValues: PaddingValues,
-    viewModel: HomeworkViewModel = hiltViewModel()
+    viewModel: HomeworkViewModel = hiltViewModel(),
+    authViewModel: AuthViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val authState by authViewModel.uiState.collectAsStateWithLifecycle()
 
     Column(
         modifier = modifier
@@ -78,7 +81,8 @@ fun HomeworkScreen(
                             HomeworkCard(
                                 homework = homework,
                                 onToggleComplete = { viewModel.toggleHomeworkCompletion(homework) },
-                                onDelete = { viewModel.deleteHomework(homework.id) }
+                                onDelete = { viewModel.deleteHomework(homework.id) },
+                                isOwner = authState.user?.uid == homework.ownerId,
                             )
                         }
                     }
@@ -148,6 +152,7 @@ private fun HomeworkCard(
     homework: Homework,
     onToggleComplete: () -> Unit,
     onDelete: () -> Unit,
+    isOwner: Boolean,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -214,14 +219,16 @@ private fun HomeworkCard(
                         )
                     }
 
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(top = 8.dp)
-                    ) {
-                        Button(
-                            onClick = onDelete
+                    if (isOwner) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(top = 8.dp)
                         ) {
-                            Text("Delete")
+                            Button(
+                                onClick = onDelete
+                            ) {
+                                Text("Delete")
+                            }
                         }
                     }
                 }
