@@ -5,6 +5,8 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import fr.uptrash.fuckupplanning.data.model.Homework
+import fr.uptrash.fuckupplanning.data.model.KarmaTransaction
+import fr.uptrash.fuckupplanning.data.model.KarmaTransactionType
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -14,7 +16,8 @@ import javax.inject.Singleton
 
 @Singleton
 class HomeworkRepository @Inject constructor(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val karmaRepository: KarmaRepository
 ) {
     private val database = FirebaseDatabase.getInstance()
     private val homeworkRef = database.getReference("homework")
@@ -62,15 +65,6 @@ class HomeworkRepository @Inject constructor(
     suspend fun deleteHomework(homeworkId: String): Result<Unit> {
         return try {
             homeworkRef.child(homeworkId).removeValue().await()
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun toggleHomeworkCompletion(homeworkId: String, isCompleted: Boolean): Result<Unit> {
-        return try {
-            homeworkRef.child(homeworkId).child("completed").setValue(isCompleted).await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -145,9 +139,24 @@ class HomeworkRepository @Inject constructor(
             // Update homework
             homeworkRef.child(homeworkId).setValue(updatedHomework).await()
 
-            // Update owner's karma
+            // Handle karma transactions
             if (ownerKarmaChange != 0 && homework.ownerId != "Unknown") {
-                userRepository.updateUserKarma(homework.ownerId, ownerKarmaChange)
+                // Remove previous vote transaction if exists
+                if (hasUpvoted || hasDownvoted) {
+                    karmaRepository.removeVoteTransaction(homeworkId, userId, homework.ownerId)
+                }
+
+                // Add new karma transaction if user is voting (not removing vote)
+                if ((isUpvote && !hasUpvoted) || (!isUpvote && !hasDownvoted)) {
+                    val transaction = KarmaTransaction(
+                        userId = homework.ownerId,
+                        homeworkId = homeworkId,
+                        karmaChange = if (isUpvote) 1 else -1,
+                        type = KarmaTransactionType.VOTE,
+                        voterUserId = userId
+                    )
+                    karmaRepository.addKarmaTransaction(transaction)
+                }
             }
 
             Result.success(Unit)

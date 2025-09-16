@@ -101,10 +101,28 @@
     <string name="showing_tp2_tda_cm_courses_and_general_events">Affiche TP2 (TDA, cours CM et événements généraux)</string>
     <string name="showing_tp3_tdb_cm_courses_and_general_events">Affiche TP3 (TDB, cours CM et événements généraux)</string>
     <string name="showing_tp4_tdb_cm_courses_and_general_events">Affiche TP4 (TDB, cours CM et événements généraux)</string>
-    <string name="more_settings_will_be_available_in_future_updates">D\'autres paramètres seront disponibles dans de futures mises à jour</string>
 
-    <string name="tap_to_view_full_details">Appuyez pour voir tous les détails</string>
-    <string name="last_updated">Dernière mise à jour</string>
+    <!-- Homework screen -->
+    <string name="add_homework">Ajouter un devoir</string>
+    <string name="no_homework_yet">Aucun devoir pour le moment</string>
+    <string name="tap_plus_to_add_homework">Appuyez sur le bouton + pour ajouter votre premier devoir</string>
+    <string name="your_total_karma">Votre karma total</string>
+    <string name="due_label">À rendre : %1$s</string>
+    <string name="karma_label">Karma : %1$d</string>
+    <string name="delete">Supprimer</string>
+    <string name="upvote">Vote positif</string>
+    <string name="downvote">Vote négatif</string>
+
+    <!-- Add homework bottom sheet -->
+    <string name="add_new_homework">Ajouter un nouveau devoir</string>
+    <string name="homework_description">Description du devoir</string>
+    <string name="due_date">Date limite</string>
+    <string name="select_date">Sélectionner une date</string>
+    <string name="cancel">Annuler</string>
+    <string name="ok">OK</string>
+
+    <!-- Homework errors -->
+    <string name="cannot_vote_own_homework">Vous ne pouvez pas voter sur votre propre devoir</string>
 
     <!-- Additional strings -->
     <string name="schedule">Horaire</string>

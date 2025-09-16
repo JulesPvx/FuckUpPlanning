@@ -1,5 +1,6 @@
 package fr.uptrash.fuckupplanning.ui.homework
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,15 +20,17 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,10 +40,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import fr.uptrash.fuckupplanning.R
 import fr.uptrash.fuckupplanning.data.model.Homework
 import fr.uptrash.fuckupplanning.ui.auth.AuthViewModel
 import fr.uptrash.fuckupplanning.ui.theme.InvalidColor
@@ -65,6 +70,18 @@ fun HomeworkScreen(
             .fillMaxSize()
             .padding(paddingValues)
     ) {
+        // User Karma Display
+        if (authState.isAuthenticated) {
+            UserKarmaCard(
+                totalKarma = uiState.userTotalKarma,
+                modifier = Modifier.padding(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = 16.dp
+                )
+            )
+        }
+
         // Content
         Box(modifier = Modifier.fillMaxSize()) {
             when {
@@ -87,9 +104,9 @@ fun HomeworkScreen(
                         items(uiState.homeworkList) { homework ->
                             HomeworkCard(
                                 homework = homework,
-                                onToggleComplete = { viewModel.toggleHomeworkCompletion(homework) },
-                                onDelete = { viewModel.deleteHomework(homework.id) },
                                 isOwner = authState.user?.uid == homework.ownerId,
+                                viewModel = viewModel,
+                                modifier = Modifier.animateItem()
                             )
                         }
                     }
@@ -97,8 +114,13 @@ fun HomeworkScreen(
             }
 
             ExtendedFloatingActionButton(
-                text = { Text("Add Homework") },
-                icon = { Icon(Icons.Default.Add, contentDescription = "Add Homework") },
+                text = { Text(stringResource(R.string.add_homework)) },
+                icon = {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = stringResource(R.string.add_homework)
+                    )
+                },
                 onClick = { viewModel.showAddDialog() },
                 modifier = Modifier
                     .padding(16.dp)
@@ -142,12 +164,12 @@ private fun EmptyState(modifier: Modifier = Modifier) {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "No homework yet",
+            text = stringResource(R.string.no_homework_yet),
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.outline
         )
         Text(
-            text = "Tap the + button to add your first homework",
+            text = stringResource(R.string.tap_plus_to_add_homework),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.outline
         )
@@ -158,8 +180,6 @@ private fun EmptyState(modifier: Modifier = Modifier) {
 private fun HomeworkCard(
     modifier: Modifier = Modifier,
     homework: Homework,
-    onToggleComplete: () -> Unit,
-    onDelete: () -> Unit,
     isOwner: Boolean,
     viewModel: HomeworkViewModel = hiltViewModel()
 ) {
@@ -168,7 +188,7 @@ private fun HomeworkCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .alpha(if (homework.karma <= -3) 0.5f else 1f)
+            .alpha(animateFloatAsState(if (homework.karma <= -3) 0.5f else 1f).value)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -198,7 +218,10 @@ private fun HomeworkCard(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "Due: ${formatDate(homework.dueDate)}",
+                                text = stringResource(
+                                    R.string.due_label,
+                                    formatDate(homework.dueDate)
+                                ),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = if (isOverdue(homework.dueDate)) Color.Red else MaterialTheme.colorScheme.outline,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
@@ -231,7 +254,7 @@ private fun HomeworkCard(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "Karma: ${homework.karma}",
+                                    text = stringResource(R.string.karma_label, homework.karma),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = when {
                                         homework.karma > 0 -> ValidColor
@@ -245,24 +268,27 @@ private fun HomeworkCard(
                     }
 
                     // Description
-                    if (homework.description.isNotEmpty()) {
-                        Text(
-                            text = homework.description,
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
-                    }
+                    Text(
+                        text = homework.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
 
-                    // Delete button for owner
-                    if (isOwner) {
-                        Button(
-                            modifier = Modifier
-                                .padding(top = 8.dp)
-                                .align(Alignment.End),
-                            onClick = onDelete
-                        ) {
-                            Text("Delete")
-                        }
+                if (isOwner) {
+                    FilledTonalIconButton(
+                        onClick = { viewModel.deleteHomework(homework.id) },
+                        modifier = Modifier.size(32.dp),
+                        colors = IconButtonDefaults.filledTonalIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.1f),
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = stringResource(R.string.delete),
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
                 }
 
@@ -282,7 +308,7 @@ private fun HomeworkCard(
                         ) {
                             Icon(
                                 Icons.Default.KeyboardArrowUp,
-                                contentDescription = "Upvote",
+                                contentDescription = stringResource(R.string.upvote),
                                 tint = if (hasUpvoted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -301,7 +327,7 @@ private fun HomeworkCard(
                         ) {
                             Icon(
                                 Icons.Default.KeyboardArrowDown,
-                                contentDescription = "Downvote",
+                                contentDescription = stringResource(R.string.downvote),
                                 tint = if (hasDownvoted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -309,6 +335,41 @@ private fun HomeworkCard(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun UserKarmaCard(
+    totalKarma: Int,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(R.string.your_total_karma),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            Text(
+                text = totalKarma.toString(),
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = when {
+                    totalKarma > 0 -> ValidColor
+                    totalKarma < 0 -> InvalidColor
+                    else -> MaterialTheme.colorScheme.onSurface
+                }
+            )
         }
     }
 }

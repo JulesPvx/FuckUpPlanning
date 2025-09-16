@@ -1,11 +1,15 @@
 package fr.uptrash.fuckupplanning.ui.homework
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import fr.uptrash.fuckupplanning.R
 import fr.uptrash.fuckupplanning.data.model.Homework
 import fr.uptrash.fuckupplanning.data.repository.AuthRepository
 import fr.uptrash.fuckupplanning.data.repository.HomeworkRepository
+import fr.uptrash.fuckupplanning.data.repository.KarmaRepository
 import fr.uptrash.fuckupplanning.data.repository.MMIYear
 import fr.uptrash.fuckupplanning.data.repository.SettingsRepository
 import fr.uptrash.fuckupplanning.data.repository.TPGroup
@@ -22,7 +26,9 @@ import kotlin.time.ExperimentalTime
 class HomeworkViewModel @Inject constructor(
     private val homeworkRepository: HomeworkRepository,
     private val settingsRepository: SettingsRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val karmaRepository: KarmaRepository,
+    @param:ApplicationContext private val context: Context
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(HomeworkUiState())
     val uiState: StateFlow<HomeworkUiState> = _uiState.asStateFlow()
@@ -32,6 +38,18 @@ class HomeworkViewModel @Inject constructor(
     init {
         loadHomework()
         setupReactiveFiltering()
+        observeUserKarma()
+    }
+
+    private fun observeUserKarma() {
+        val userId = authRepository.currentUser?.uid
+        if (userId != null) {
+            viewModelScope.launch {
+                karmaRepository.observeUserTotalKarma(userId).collect { totalKarma ->
+                    _uiState.value = _uiState.value.copy(userTotalKarma = totalKarma)
+                }
+            }
+        }
     }
 
     private fun setupReactiveFiltering() {
@@ -96,16 +114,6 @@ class HomeworkViewModel @Inject constructor(
         }
     }
 
-    fun toggleHomeworkCompletion(homework: Homework) {
-        viewModelScope.launch {
-            val updatedHomework = homework.copy(isCompleted = !homework.isCompleted)
-            homeworkRepository.updateHomework(updatedHomework)
-                .onFailure { error ->
-                    _uiState.value = _uiState.value.copy(error = error.message)
-                }
-        }
-    }
-
     fun deleteHomework(homeworkId: String) {
         viewModelScope.launch {
             homeworkRepository.deleteHomework(homeworkId)
@@ -121,8 +129,8 @@ class HomeworkViewModel @Inject constructor(
 
             // Don't allow voting on own homework
             if (homework.ownerId == userId) {
-                _uiState.value = _uiState.value.copy(error = "You cannot vote on your own homework")
-                return@launch
+                _uiState.value =
+                    _uiState.value.copy(error = context.getString(R.string.cannot_vote_own_homework))
             }
 
             homeworkRepository.voteOnHomework(homework.id, userId, isUpvote)
@@ -163,5 +171,6 @@ data class HomeworkUiState @OptIn(ExperimentalTime::class) constructor(
     val selectedTPGroup: TPGroup = TPGroup.ALL,
     val selectedMMIYear: MMIYear = MMIYear.MMI1,
     val error: String? = null,
-    val showAddDialog: Boolean = false
+    val showAddDialog: Boolean = false,
+    val userTotalKarma: Int = 0
 )

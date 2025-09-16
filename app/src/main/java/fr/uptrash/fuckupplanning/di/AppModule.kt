@@ -6,6 +6,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import fr.uptrash.fuckupplanning.data.repository.HomeworkRepository
+import fr.uptrash.fuckupplanning.data.repository.KarmaRepository
 import fr.uptrash.fuckupplanning.data.repository.UserRepository
 import javax.inject.Singleton
 
@@ -21,8 +22,17 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideHomeworkRepository(userRepository: UserRepository): HomeworkRepository {
-        return HomeworkRepository(userRepository)
+    fun provideKarmaRepository(): KarmaRepository {
+        return KarmaRepository()
+    }
+
+    @Provides
+    @Singleton
+    fun provideHomeworkRepository(
+        userRepository: UserRepository,
+        karmaRepository: KarmaRepository
+    ): HomeworkRepository {
+        return HomeworkRepository(userRepository, karmaRepository)
     }
 
     @Provides
