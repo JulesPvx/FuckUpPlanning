@@ -35,6 +35,12 @@ sealed class CustomAppTheme(
     object BLUE : CustomAppTheme("blue", "Blue", blueLightScheme, blueDarkScheme)
 }
 
+enum class ThemeMode(val key: String) {
+    LIGHT("light"),
+    DARK("dark"),
+    SYSTEM("system")
+}
+
 val appThemes: List<AppTheme> = listOf(
     AppTheme.SYSTEM,
     CustomAppTheme.PINK,
@@ -58,6 +64,10 @@ class ThemeViewModel @Inject constructor(
             settingsRepository.selectedAppThemeFlow.collect { appTheme ->
                 _uiState.value = _uiState.value.copy(currentTheme = appTheme)
             }
+
+            settingsRepository.selectedAppThemeModeFlow.collect { themeMode ->
+                _uiState.value = _uiState.value.copy(themeMode = themeMode)
+            }
         }
     }
 
@@ -66,8 +76,15 @@ class ThemeViewModel @Inject constructor(
             settingsRepository.saveSelectedAppTheme(appTheme)
         }
     }
+
+    fun updateThemeMode(themeMode: ThemeMode) {
+        viewModelScope.launch {
+            settingsRepository.saveSelectedAppThemeMode(themeMode)
+        }
+    }
 }
 
 data class ThemeUiState @OptIn(ExperimentalTime::class) constructor(
+    val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val currentTheme: AppTheme = AppTheme.SYSTEM,
 )

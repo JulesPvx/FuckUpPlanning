@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import fr.uptrash.fuckupplanning.ui.theme.AppTheme
+import fr.uptrash.fuckupplanning.ui.theme.ThemeMode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -26,9 +27,11 @@ interface SettingsRepository {
     val selectedTPGroupFlow: Flow<TPGroup>
     val selectedMMIYearFlow: Flow<MMIYear>
     val selectedAppThemeFlow: Flow<AppTheme>
+    val selectedAppThemeModeFlow: Flow<ThemeMode>
     suspend fun saveSelectedTPGroup(tpGroup: TPGroup)
     suspend fun saveSelectedMMIYear(mmiYear: MMIYear)
     suspend fun saveSelectedAppTheme(appTheme: AppTheme)
+    suspend fun saveSelectedAppThemeMode(themeMode: ThemeMode)
 }
 
 class SettingsRepositoryImpl(
@@ -39,6 +42,7 @@ class SettingsRepositoryImpl(
         val KEY_SELECTED_TP = stringPreferencesKey("selected_tp_group")
         val KEY_SELECTED_MMI_YEAR = stringPreferencesKey("selected_mmi_year")
         val KEY_SELECTED_APP_THEME = stringPreferencesKey("selected_app_theme")
+        val KEY_SELECTED_APP_THEME_MODE = stringPreferencesKey("selected_app_theme_mode")
     }
 
     override val selectedTPGroupFlow: Flow<TPGroup> = dataStore.data
@@ -71,6 +75,16 @@ class SettingsRepositoryImpl(
             }
         }
 
+    override val selectedAppThemeModeFlow: Flow<ThemeMode> = dataStore.data
+        .map { prefs ->
+            val stored = prefs[KEY_SELECTED_APP_THEME_MODE] ?: ThemeMode.SYSTEM.key
+            try {
+                ThemeMode.entries.first { it.key == stored }
+            } catch (e: NoSuchElementException) {
+                ThemeMode.SYSTEM
+            }
+        }
+
     override suspend fun saveSelectedTPGroup(tpGroup: TPGroup) {
         dataStore.edit { prefs ->
             prefs[KEY_SELECTED_TP] = tpGroup.name
@@ -86,6 +100,12 @@ class SettingsRepositoryImpl(
     override suspend fun saveSelectedAppTheme(appTheme: AppTheme) {
         dataStore.edit { prefs ->
             prefs[KEY_SELECTED_APP_THEME] = appTheme.key
+        }
+    }
+
+    override suspend fun saveSelectedAppThemeMode(themeMode: ThemeMode) {
+        dataStore.edit { prefs ->
+            prefs[KEY_SELECTED_APP_THEME_MODE] = themeMode.key
         }
     }
 }

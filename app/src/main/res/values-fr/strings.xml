@@ -13,6 +13,13 @@
     <string name="no_events_for_day">Aucun événement pour ce jour</string>
     <string name="error_format">Erreur : %1$s</string>
 
+    <!-- Theme -->
+    <string name="theme_selection">Sélection du thème</string>
+    <string name="choose_your_preferred_theme">Choisissez votre thème préféré</string>
+    <string name="light_theme">Thème clair</string>
+    <string name="dark_theme">Thème sombre</string>
+    <string name="system_default">Système</string>
+
     <!-- Day summary -->
     <string name="day_summary">Récapitulatif</string>
     <string name="start">Début</string>

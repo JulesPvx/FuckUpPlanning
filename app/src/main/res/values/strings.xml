@@ -69,6 +69,9 @@
     <!-- Theme -->
     <string name="theme_selection">Theme</string>
     <string name="choose_your_preferred_theme">Choose your preferred theme</string>
+    <string name="light_theme">Light</string>
+    <string name="dark_theme">Dark</string>
+    <string name="system_default">System</string>
 
     <!-- Duration strings -->
     <string name="duration_label">Duration</string>

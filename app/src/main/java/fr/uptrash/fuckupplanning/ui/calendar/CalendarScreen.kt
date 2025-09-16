@@ -84,6 +84,7 @@ import fr.uptrash.fuckupplanning.data.repository.RestaurantMenuRepository
 import fr.uptrash.fuckupplanning.data.repository.TPGroup
 import fr.uptrash.fuckupplanning.ui.theme.AppTheme
 import fr.uptrash.fuckupplanning.ui.theme.CustomAppTheme
+import fr.uptrash.fuckupplanning.ui.theme.ThemeMode
 import fr.uptrash.fuckupplanning.ui.theme.ThemeViewModel
 import fr.uptrash.fuckupplanning.ui.theme.appThemes
 import fr.uptrash.fuckupplanning.ui.theme.blueLightScheme
@@ -274,12 +275,14 @@ fun CalendarScreen(
                 sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
             ) {
                 SettingsView(
+                    selectedThemeMode = themeState.themeMode,
                     selectedTheme = themeState.currentTheme,
                     selectedTPGroup = uiState.selectedTPGroup,
                     selectedMMIYear = uiState.selectedMMIYear,
                     onTPGroupChange = { viewModel.selectTPGroup(it) },
                     onMMIYearChange = { viewModel.selectMMIYear(it) },
                     onThemeChange = { themeViewMode.updateTheme(it) },
+                    onThemeModeChange = { themeViewMode.updateThemeMode(it) },
                     onDismiss = { viewModel.dismissSettings() }
                 )
             }
@@ -2625,12 +2628,14 @@ fun RestaurantMenuView(
 // Settings View
 @Composable
 fun SettingsView(
+    selectedThemeMode: ThemeMode,
     selectedTheme: AppTheme,
     selectedTPGroup: TPGroup,
     selectedMMIYear: MMIYear,
     onTPGroupChange: (TPGroup) -> Unit,
     onMMIYearChange: (MMIYear) -> Unit,
     onThemeChange: (AppTheme) -> Unit,
+    onThemeModeChange: (ThemeMode) -> Unit,
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
@@ -3067,6 +3072,41 @@ fun SettingsView(
                                                 onThemeChange(appTheme)
                                             }
                                     )
+                                }
+                            }
+
+                            // System/Dark/Light mode
+                            SingleChoiceSegmentedButtonRow(
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                ThemeMode.entries.forEachIndexed { index, themeMode ->
+                                    val isSelected = selectedThemeMode == themeMode
+                                    SegmentedButton(
+                                        shape = SegmentedButtonDefaults.itemShape(
+                                            index = index,
+                                            count = 3
+                                        ),
+                                        onClick = {
+                                            onThemeModeChange(themeMode)
+                                        },
+                                        selected = isSelected,
+                                        colors = SegmentedButtonDefaults.colors(
+                                            activeContainerColor = MaterialTheme.colorScheme.primary,
+                                            activeContentColor = MaterialTheme.colorScheme.onPrimary,
+                                            inactiveContainerColor = MaterialTheme.colorScheme.surface,
+                                            inactiveContentColor = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    ) {
+                                        Text(
+                                            text = when (themeMode) {
+                                                ThemeMode.LIGHT -> stringResource(R.string.light_theme)
+                                                ThemeMode.DARK -> stringResource(R.string.dark_theme)
+                                                ThemeMode.SYSTEM -> stringResource(R.string.system_default)
+                                            },
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                                        )
+                                    }
                                 }
                             }
                         }
