@@ -566,7 +566,7 @@ fun WeekView(
     paddingValues: PaddingValues,
     showFullDay: (LocalDate) -> Unit = { _ -> }
 ) {
-    val startOfWeek = selectedDate.minus(selectedDate.dayOfWeek.isoDayNumber - 1, DateTimeUnit.DAY)
+    val startOfWeek = getWeekStart(selectedDate)
     // Only show Monday to Friday (5 days instead of 7)
     val weekDays = (0..4).map { startOfWeek.plus(it, DateTimeUnit.DAY) }
 
@@ -3078,8 +3078,8 @@ private fun formatDateRange(date: LocalDate, viewMode: CalendarViewMode): String
     return when (viewMode) {
         CalendarViewMode.DAY -> formatDate(date)
         CalendarViewMode.WEEK -> {
-            val startOfWeek = date.minus(date.dayOfWeek.isoDayNumber - 1, DateTimeUnit.DAY)
-            val endOfWeek = startOfWeek.plus(6, DateTimeUnit.DAY)
+            val startOfWeek = getWeekStart(date)
+            val endOfWeek = startOfWeek.plus(4, DateTimeUnit.DAY)
             "${formatDate(startOfWeek)} - ${formatDate(endOfWeek)}"
         }
 
@@ -3124,3 +3124,17 @@ private fun formatDuration(totalMinutes: Int): String {
     }
 }
 
+private fun getWeekStart(date: LocalDate): LocalDate {
+    return when (date.dayOfWeek) {
+        DayOfWeek.SATURDAY, DayOfWeek.SUNDAY -> {
+            // Move to next Monday
+            val daysToNextMonday = 8 - date.dayOfWeek.isoDayNumber
+            date.plus(daysToNextMonday, DateTimeUnit.DAY)
+        }
+
+        else -> {
+            // Start of current week (Monday)
+            date.minus(date.dayOfWeek.isoDayNumber - 1, DateTimeUnit.DAY)
+        }
+    }
+}
