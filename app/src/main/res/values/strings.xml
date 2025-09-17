@@ -104,6 +104,7 @@
 
     <!-- Homework screen -->
     <string name="add_homework">Add Homework</string>
+    <string name="uploading">Uploading…</string>
     <string name="no_homework_yet">No homework yet</string>
     <string name="tap_plus_to_add_homework">Tap the + button to add your first homework</string>
     <string name="your_total_karma">Your Total Karma</string>

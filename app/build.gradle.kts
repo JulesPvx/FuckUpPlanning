@@ -50,6 +50,11 @@ dependencies {
     implementation(libs.firebase.database)
     implementation(libs.firebase.auth)
     implementation(libs.firebase.storage)
+    implementation(libs.firebase.appcheck.playintegrity)
+
+    // Image loading and processing
+    implementation(libs.coil.compose)
+    implementation(libs.androidx.exifinterface)
 
     // Hilt dependencies
     implementation(libs.hilt.android)

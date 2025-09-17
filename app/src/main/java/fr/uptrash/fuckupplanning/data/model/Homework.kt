@@ -12,6 +12,7 @@ data class Homework(
     val createdAt: Long = System.currentTimeMillis(),
     val ownerId: String = "Unknown",
     val karma: Int = 0,
+    val imageUrls: List<String> = emptyList(),
     val upvotes: Map<String, Boolean> = emptyMap(), // userId -> true for upvote
     val downvotes: Map<String, Boolean> = emptyMap() // userId -> true for downvote
 ) {

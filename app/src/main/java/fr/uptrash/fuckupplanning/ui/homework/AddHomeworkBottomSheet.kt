@@ -1,5 +1,6 @@
 package fr.uptrash.fuckupplanning.ui.homework
 
+import android.net.Uri
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
@@ -37,6 +38,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import fr.uptrash.fuckupplanning.R
+import fr.uptrash.fuckupplanning.ui.homework.components.ImagePicker
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -45,11 +47,14 @@ import java.util.Locale
 @Composable
 fun AddHomeworkBottomSheet(
     onDismiss: () -> Unit,
-    onAddHomework: (description: String, dueDate: Long) -> Unit
+    onAddHomework: (description: String, dueDate: Long) -> Unit,
+    onAddHomeworkWithImages: (description: String, dueDate: Long, images: List<Uri>) -> Unit,
+    isUploading: Boolean = false
 ) {
     var description by remember { mutableStateOf("") }
     var showDatePicker by remember { mutableStateOf(false) }
     var selectedDate by remember { mutableStateOf(System.currentTimeMillis()) }
+    var selectedImages by remember { mutableStateOf<List<Uri>>(emptyList()) }
 
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = selectedDate
@@ -60,7 +65,11 @@ fun AddHomeworkBottomSheet(
     }
 
     ModalBottomSheet(
-        onDismissRequest = onDismiss
+        onDismissRequest = {
+            if (!isUploading) {
+                onDismiss()
+            }
+        }
     ) {
         Column(
             modifier = Modifier
@@ -109,6 +118,16 @@ fun AddHomeworkBottomSheet(
                 }
             )
 
+            // Image picker component
+            ImagePicker(
+                selectedImages = selectedImages,
+                onImagesSelected = { selectedImages = it },
+                onImageRemoved = { imageToRemove ->
+                    selectedImages = selectedImages.filterNot { it == imageToRemove }
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
@@ -121,11 +140,19 @@ fun AddHomeworkBottomSheet(
 
                 Button(
                     onClick = {
-                        onAddHomework(description, selectedDate)
+                        if (selectedImages.isNotEmpty()) {
+                            onAddHomeworkWithImages(description, selectedDate, selectedImages)
+                        } else {
+                            onAddHomework(description, selectedDate)
+                        }
                     },
-                    enabled = confirmEnabled
+                    enabled = confirmEnabled && !isUploading
                 ) {
-                    Text(stringResource(R.string.add_homework))
+                    if (isUploading) {
+                        Text(stringResource(R.string.uploading))
+                    } else {
+                        Text(stringResource(R.string.add_homework))
+                    }
                 }
             }
 

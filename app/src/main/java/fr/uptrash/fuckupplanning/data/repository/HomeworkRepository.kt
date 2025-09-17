@@ -1,5 +1,6 @@
 package fr.uptrash.fuckupplanning.data.repository
 
+import android.net.Uri
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -17,7 +18,8 @@ import javax.inject.Singleton
 @Singleton
 class HomeworkRepository @Inject constructor(
     private val userRepository: UserRepository,
-    private val karmaRepository: KarmaRepository
+    private val karmaRepository: KarmaRepository,
+    private val imageStorageRepository: ImageStorageRepository
 ) {
     private val database = FirebaseDatabase.getInstance()
     private val homeworkRef = database.getReference("homework")
@@ -62,8 +64,96 @@ class HomeworkRepository @Inject constructor(
         }
     }
 
+    suspend fun addHomeworkWithImages(homework: Homework, imageUris: List<Uri>): Result<String> {
+        return try {
+            val key = homeworkRef.push().key ?: throw Exception("Failed to generate key")
+
+            // Upload images if any
+            val imageUrls = if (imageUris.isNotEmpty()) {
+                val uploadResult = imageStorageRepository.uploadImages(imageUris, key)
+                if (uploadResult.isFailure) {
+                    return Result.failure(
+                        uploadResult.exceptionOrNull() ?: Exception("Failed to upload images")
+                    )
+                }
+                uploadResult.getOrThrow()
+            } else {
+                emptyList()
+            }
+
+            // Create homework with image URLs
+            val homeworkWithImages = homework.copy(id = key, imageUrls = imageUrls)
+            homeworkRef.child(key).setValue(homeworkWithImages).await()
+
+            Result.success(key)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun updateHomeworkWithImages(
+        homework: Homework,
+        newImageUris: List<Uri> = emptyList()
+    ): Result<Unit> {
+        return try {
+            // Upload new images if any
+            val newImageUrls = if (newImageUris.isNotEmpty()) {
+                val uploadResult = imageStorageRepository.uploadImages(newImageUris, homework.id)
+                if (uploadResult.isFailure) {
+                    return Result.failure(
+                        uploadResult.exceptionOrNull() ?: Exception("Failed to upload images")
+                    )
+                }
+                uploadResult.getOrThrow()
+            } else {
+                emptyList()
+            }
+
+            // Combine existing and new image URLs
+            val allImageUrls = homework.imageUrls + newImageUrls
+            val updatedHomework = homework.copy(imageUrls = allImageUrls)
+
+            homeworkRef.child(homework.id).setValue(updatedHomework).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun removeImageFromHomework(homeworkId: String, imageUrl: String): Result<Unit> {
+        return try {
+            val snapshot = homeworkRef.child(homeworkId).get().await()
+            val homework = snapshot.getValue(Homework::class.java)?.copy(id = homeworkId)
+                ?: return Result.failure(Exception("Homework not found"))
+
+            // Remove image from storage
+            imageStorageRepository.deleteImage(imageUrl)
+
+            // Update homework with removed image URL
+            val updatedImageUrls = homework.imageUrls.filterNot { it == imageUrl }
+            val updatedHomework = homework.copy(imageUrls = updatedImageUrls)
+
+            homeworkRef.child(homeworkId).setValue(updatedHomework).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun deleteHomework(homeworkId: String): Result<Unit> {
         return try {
+            // Get homework to delete associated images
+            val snapshot = homeworkRef.child(homeworkId).get().await()
+            val homework = snapshot.getValue(Homework::class.java)?.copy(id = homeworkId)
+
+            // Delete associated images from storage
+            homework?.imageUrls?.let { imageUrls ->
+                if (imageUrls.isNotEmpty()) {
+                    imageStorageRepository.deleteImages(imageUrls)
+                }
+            }
+
+            // Delete homework from database
             homeworkRef.child(homeworkId).removeValue().await()
             Result.success(Unit)
         } catch (e: Exception) {
@@ -89,23 +179,19 @@ class HomeworkRepository @Inject constructor(
             val hasDownvoted = currentDownvotes[userId] == true
 
             var karmaChange = 0
-            var ownerKarmaChange = 0
 
             if (isUpvote) {
                 if (hasUpvoted) {
                     // Remove upvote
                     currentUpvotes.remove(userId)
                     karmaChange = -1
-                    ownerKarmaChange = -1
                 } else {
                     // Add upvote (remove downvote if exists)
                     if (hasDownvoted) {
                         currentDownvotes.remove(userId)
                         karmaChange = 2 // Remove -1 and add +1
-                        ownerKarmaChange = 2
                     } else {
                         karmaChange = 1
-                        ownerKarmaChange = 1
                     }
                     currentUpvotes[userId] = true
                 }
@@ -114,16 +200,13 @@ class HomeworkRepository @Inject constructor(
                     // Remove downvote
                     currentDownvotes.remove(userId)
                     karmaChange = 1
-                    ownerKarmaChange = 1
                 } else {
                     // Add downvote (remove upvote if exists)
                     if (hasUpvoted) {
                         currentUpvotes.remove(userId)
                         karmaChange = -2 // Remove +1 and add -1
-                        ownerKarmaChange = -2
                     } else {
                         karmaChange = -1
-                        ownerKarmaChange = -1
                     }
                     currentDownvotes[userId] = true
                 }
@@ -140,7 +223,7 @@ class HomeworkRepository @Inject constructor(
             homeworkRef.child(homeworkId).setValue(updatedHomework).await()
 
             // Handle karma transactions
-            if (ownerKarmaChange != 0 && homework.ownerId != "Unknown") {
+            if (homework.ownerId != "Unknown") {
                 // Remove previous vote transaction if exists
                 if (hasUpvoted || hasDownvoted) {
                     karmaRepository.removeVoteTransaction(homeworkId, userId, homework.ownerId)
@@ -164,23 +247,4 @@ class HomeworkRepository @Inject constructor(
             Result.failure(e)
         }
     }
-
-    fun getUserVoteStatus(homeworkId: String, userId: String): Flow<Pair<Boolean, Boolean>> =
-        callbackFlow {
-            val listener = object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    val homework = snapshot.getValue(Homework::class.java)
-                    val hasUpvoted = homework?.upvotes?.get(userId) == true
-                    val hasDownvoted = homework?.downvotes?.get(userId) == true
-                    trySend(Pair(hasUpvoted, hasDownvoted))
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    close(error.toException())
-                }
-            }
-
-            homeworkRef.child(homeworkId).addValueEventListener(listener)
-            awaitClose { homeworkRef.child(homeworkId).removeEventListener(listener) }
-        }
 }

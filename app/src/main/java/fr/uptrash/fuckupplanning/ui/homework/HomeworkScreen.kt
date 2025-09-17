@@ -48,6 +48,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.uptrash.fuckupplanning.R
 import fr.uptrash.fuckupplanning.data.model.Homework
 import fr.uptrash.fuckupplanning.ui.auth.AuthViewModel
+import fr.uptrash.fuckupplanning.ui.homework.components.HomeworkImageGallery
 import fr.uptrash.fuckupplanning.ui.theme.InvalidColor
 import fr.uptrash.fuckupplanning.ui.theme.ValidColor
 import java.text.SimpleDateFormat
@@ -137,7 +138,11 @@ fun HomeworkScreen(
             onAddHomework = { description, dueDate ->
                 viewModel.addHomework(description, dueDate)
                 viewModel.hideAddDialog()
-            }
+            },
+            onAddHomeworkWithImages = { description, dueDate, imageUris ->
+                viewModel.addHomeworkWithImages(description, dueDate, imageUris)
+            },
+            isUploading = uiState.isUploading
         )
     }
 
@@ -334,6 +339,15 @@ private fun HomeworkCard(
                         }
                     }
                 }
+            }
+
+            // Display images if any
+            if (homework.imageUrls.isNotEmpty()) {
+                HomeworkImageGallery(
+                    imageUrls = homework.imageUrls,
+                    canEdit = false,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }

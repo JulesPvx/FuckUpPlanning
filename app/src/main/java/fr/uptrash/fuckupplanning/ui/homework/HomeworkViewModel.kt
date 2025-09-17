@@ -1,6 +1,7 @@
 package fr.uptrash.fuckupplanning.ui.homework
 
 import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -123,6 +124,65 @@ class HomeworkViewModel @Inject constructor(
         }
     }
 
+    fun addHomeworkWithImages(
+        description: String,
+        dueDate: Long,
+        imageUris: List<Uri>
+    ) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isUploading = true)
+
+            val homework = Homework(
+                description = description,
+                dueDate = dueDate,
+                year = _uiState.value.selectedMMIYear,
+                tp = _uiState.value.selectedTPGroup,
+                ownerId = authRepository.currentUser?.uid ?: "Anonymous"
+            )
+
+            homeworkRepository.addHomeworkWithImages(homework, imageUris)
+                .onSuccess {
+                    _uiState.value = _uiState.value.copy(isUploading = false)
+                    hideAddDialog()
+                }
+                .onFailure { error ->
+                    _uiState.value = _uiState.value.copy(
+                        error = error.message,
+                        isUploading = false
+                    )
+                }
+        }
+    }
+
+    fun addImageToHomework(homeworkId: String, imageUris: List<Uri>) {
+        viewModelScope.launch {
+            homeworkRepository.deleteHomework(homeworkId)
+            val homework = _allHomework.value.find { it.id == homeworkId } ?: return@launch
+
+            _uiState.value = _uiState.value.copy(isUploading = true)
+
+            homeworkRepository.updateHomeworkWithImages(homework, imageUris)
+                .onSuccess {
+                    _uiState.value = _uiState.value.copy(isUploading = false)
+                }
+                .onFailure { error ->
+                    _uiState.value = _uiState.value.copy(
+                        error = error.message,
+                        isUploading = false
+                    )
+                }
+        }
+    }
+
+    fun removeImageFromHomework(homeworkId: String, imageUrl: String) {
+        viewModelScope.launch {
+            homeworkRepository.removeImageFromHomework(homeworkId, imageUrl)
+                .onFailure { error ->
+                    _uiState.value = _uiState.value.copy(error = error.message)
+                }
+        }
+    }
+
     fun voteOnHomework(homework: Homework, isUpvote: Boolean) {
         viewModelScope.launch {
             val userId = authRepository.currentUser?.uid ?: return@launch
@@ -172,5 +232,6 @@ data class HomeworkUiState @OptIn(ExperimentalTime::class) constructor(
     val selectedMMIYear: MMIYear = MMIYear.MMI1,
     val error: String? = null,
     val showAddDialog: Boolean = false,
-    val userTotalKarma: Int = 0
+    val userTotalKarma: Int = 0,
+    val isUploading: Boolean = false
 )

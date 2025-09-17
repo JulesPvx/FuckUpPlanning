@@ -104,6 +104,7 @@
 
     <!-- Homework screen -->
     <string name="add_homework">Ajouter un devoir</string>
+    <string name="uploading">Envoi en cours…</string>
     <string name="no_homework_yet">Aucun devoir pour le moment</string>
     <string name="tap_plus_to_add_homework">Appuyez sur le bouton + pour ajouter votre premier devoir</string>
     <string name="your_total_karma">Votre karma total</string>

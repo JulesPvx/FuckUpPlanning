@@ -40,6 +40,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.Firebase
+import com.google.firebase.appcheck.appCheck
+import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory
+import com.google.firebase.initialize
 import dagger.hilt.android.AndroidEntryPoint
 import fr.uptrash.fuckupplanning.ui.auth.AuthViewModel
 import fr.uptrash.fuckupplanning.ui.calendar.CalendarScreen
@@ -58,6 +62,12 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        Firebase.initialize(context = this)
+        Firebase.appCheck.installAppCheckProviderFactory(
+            PlayIntegrityAppCheckProviderFactory.getInstance(),
+        )
+
         setContent {
             val calendarViewModel: CalendarViewModel = hiltViewModel()
             val themeViewModel: ThemeViewModel = hiltViewModel()
