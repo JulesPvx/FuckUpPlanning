@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import java.util.Calendar
 import javax.inject.Inject
 import kotlin.time.ExperimentalTime
 
@@ -66,8 +67,16 @@ class HomeworkViewModel @Inject constructor(
                     (tpGroup == TPGroup.ALL || homework.tp == tpGroup) &&
                             homework.year == mmiYear
                 }
+
+                val threeDaysAgo = Calendar.getInstance().apply {
+                    add(Calendar.DAY_OF_YEAR, -3)
+                }.timeInMillis
+
+                val (recent, older) = filteredHomework.partition { it.dueDate >= threeDaysAgo }
+
                 _uiState.value = _uiState.value.copy(
-                    homeworkList = filteredHomework,
+                    recentHomework = recent,
+                    olderHomework = older,
                     selectedTPGroup = tpGroup,
                     selectedMMIYear = mmiYear
                 )
@@ -223,11 +232,17 @@ class HomeworkViewModel @Inject constructor(
     fun hideAddDialog() {
         _uiState.value = _uiState.value.copy(showAddDialog = false)
     }
+
+    fun toggleOlderHomeworkVisibility() {
+        _uiState.value = _uiState.value.copy(isOlderHomeworkExpanded = !_uiState.value.isOlderHomeworkExpanded)
+    }
 }
 
 data class HomeworkUiState @OptIn(ExperimentalTime::class) constructor(
     val isLoading: Boolean = false,
-    val homeworkList: List<Homework> = emptyList(),
+    val recentHomework: List<Homework> = emptyList(),
+    val olderHomework: List<Homework> = emptyList(),
+    val isOlderHomeworkExpanded: Boolean = false,
     val selectedTPGroup: TPGroup = TPGroup.ALL,
     val selectedMMIYear: MMIYear = MMIYear.MMI1,
     val error: String? = null,

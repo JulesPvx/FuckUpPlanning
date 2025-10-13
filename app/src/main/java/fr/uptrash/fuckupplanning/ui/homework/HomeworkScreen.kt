@@ -2,6 +2,7 @@ package fr.uptrash.fuckupplanning.ui.homework
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,6 +52,7 @@ import fr.uptrash.fuckupplanning.ui.auth.AuthViewModel
 import fr.uptrash.fuckupplanning.ui.homework.components.HomeworkImageGallery
 import fr.uptrash.fuckupplanning.ui.theme.InvalidColor
 import fr.uptrash.fuckupplanning.ui.theme.ValidColor
+import androidx.compose.ui.draw.rotate
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -92,7 +94,7 @@ fun HomeworkScreen(
                     )
                 }
 
-                uiState.homeworkList.isEmpty() -> {
+                uiState.recentHomework.isEmpty() && uiState.olderHomework.isEmpty() -> {
                     EmptyState(modifier = Modifier.align(Alignment.Center))
                 }
 
@@ -102,13 +104,32 @@ fun HomeworkScreen(
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(uiState.homeworkList) { homework ->
+                        items(uiState.recentHomework) { homework ->
                             HomeworkCard(
                                 homework = homework,
                                 isOwner = authState.user?.uid == homework.ownerId,
                                 viewModel = viewModel,
                                 modifier = Modifier.animateItem()
                             )
+                        }
+
+                        if (uiState.olderHomework.isNotEmpty()) {
+                            item {
+                                OlderHomeworkHeader(
+                                    isExpanded = uiState.isOlderHomeworkExpanded,
+                                    onClick = { viewModel.toggleOlderHomeworkVisibility() }
+                                )
+                            }
+                            if (uiState.isOlderHomeworkExpanded) {
+                                items(uiState.olderHomework) { homework ->
+                                    HomeworkCard(
+                                        homework = homework,
+                                        isOwner = authState.user?.uid == homework.ownerId,
+                                        viewModel = viewModel,
+                                        modifier = Modifier.animateItem()
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -395,4 +416,32 @@ private fun formatDate(timestamp: Long): String {
 
 private fun isOverdue(dueDate: Long): Boolean {
     return dueDate < System.currentTimeMillis()
+}
+
+@Composable
+private fun OlderHomeworkHeader(
+    isExpanded: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val rotationAngle by animateFloatAsState(targetValue = if (isExpanded) 180f else 0f)
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = stringResource(R.string.older_homework),
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = Modifier.weight(1f)
+        )
+        Icon(
+            imageVector = Icons.Default.KeyboardArrowDown,
+            contentDescription = if (isExpanded) stringResource(R.string.collapse) else stringResource(R.string.expand),
+            modifier = Modifier.rotate(rotationAngle)
+        )
+    }
 }
