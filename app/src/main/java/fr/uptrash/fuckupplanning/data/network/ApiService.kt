@@ -23,7 +23,7 @@ interface ApiService {
         "Pragma: no-cache",
         "Expires: 0"
     )
-    @GET("jsp/custom/modules/plannings/anonymous_cal.jsp?resources=18300&projectId=16&calType=ical&nbWeeks=28")
+    @GET("jsp/custom/modules/plannings/anonymous_cal.jsp?resources=18300&projectId=17&calType=ical&nbWeeks=28")
     suspend fun getS1MMI1ICalData(): String
 
     /**
@@ -35,7 +35,7 @@ interface ApiService {
         "Pragma: no-cache",
         "Expires: 0"
     )
-    @GET("jsp/custom/modules/plannings/anonymous_cal.jsp?resources=21211&projectId=16&calType=ical&nbWeeks=28")
+    @GET("jsp/custom/modules/plannings/anonymous_cal.jsp?resources=21211&projectId=17&calType=ical&nbWeeks=28")
     suspend fun getS2MMI1ICalData(): String
 
     /* MMI 2 */
@@ -49,7 +49,7 @@ interface ApiService {
         "Pragma: no-cache",
         "Expires: 0"
     )
-    @GET("jsp/custom/modules/plannings/anonymous_cal.jsp?resources=21212&projectId=16&calType=ical&nbWeeks=28")
+    @GET("jsp/custom/modules/plannings/anonymous_cal.jsp?resources=21212&projectId=17&calType=ical&nbWeeks=28")
     suspend fun getS1MMI2ICalData(): String
 
     /**
@@ -61,7 +61,7 @@ interface ApiService {
         "Pragma: no-cache",
         "Expires: 0"
     )
-    @GET("jsp/custom/modules/plannings/anonymous_cal.jsp?resources=21298&projectId=16&calType=ical&nbWeeks=28")
+    @GET("jsp/custom/modules/plannings/anonymous_cal.jsp?resources=21298&projectId=17&calType=ical&nbWeeks=28")
     suspend fun getS2MMI2ICalData(): String
 
     /* MMI 3 */
@@ -75,7 +75,7 @@ interface ApiService {
         "Pragma: no-cache",
         "Expires: 0"
     )
-    @GET("jsp/custom/modules/plannings/anonymous_cal.jsp?resources=2450&projectId=16&calType=ical&nbWeeks=28")
+    @GET("jsp/custom/modules/plannings/anonymous_cal.jsp?resources=2450&projectId=17&calType=ical&nbWeeks=28")
     suspend fun getS1MMI3ICalData(): String
 
     /**
@@ -87,6 +87,6 @@ interface ApiService {
         "Pragma: no-cache",
         "Expires: 0"
     )
-    @GET("jsp/custom/modules/plannings/anonymous_cal.jsp?resources=2471&projectId=16&calType=ical&nbWeeks=28")
+    @GET("jsp/custom/modules/plannings/anonymous_cal.jsp?resources=2471&projectId=17&calType=ical&nbWeeks=28")
     suspend fun getS2MMI3ICalData(): String
 }
